@@ -32,7 +32,9 @@
  * output functions
  */
 
-static const char *insets[] = {
+#define LEVELS (8)
+
+static const char *insets[LEVELS] = {
   "",
   "  ",
   "    ",
@@ -52,6 +54,8 @@ void print_line(int level, const char *fmt, ...)
   vsnprintf(line_akku, 4096, fmt, par);
   va_end(par);
 
+  if (level >= LEVELS)
+    bailout("Recursion loop caught");
   printf("%s%s\n", insets[level], line_akku);
 }
 
@@ -76,6 +80,8 @@ void continue_line(const char *fmt, ...)
 
 void finish_line(int level)
 {
+  if (level >= LEVELS)
+    bailout("Recursion loop caught");
   printf("%s%s\n", insets[level], line_akku);
 }
 
