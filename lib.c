@@ -2,7 +2,7 @@
  * lib.c
  * Global utility functions.
  *
- * Copyright (c) 2003 Christoph Pfisterer
+ * Copyright (c) 2003-04 Christoph Pfisterer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -287,6 +287,18 @@ void format_uuid(void *uuid, char *to)
     strcpy(to, " (MS GUID)");
   } else {                          /* 1 1 1 */
     strcpy(to, " (Reserved)");
+  }
+}
+
+void format_uuid_lvm(void *uuid, char *to)
+{
+  char *from = uuid;
+  int i;
+
+  for (i = 0; i < 32; i++) {
+    *to++ = *from++;
+    if ((i & 3) == 1 && i > 1 && i < 29)
+      *to++ = '-';
   }
 }
 

@@ -123,6 +123,7 @@ void format_ascii(void *from, char *to);
 void format_unicode(void *from, char *to);
 
 void format_uuid(void *from, char *to);
+void format_uuid_lvm(void *uuid, char *to);
 
 /* endian-aware data access */
 

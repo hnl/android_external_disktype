@@ -62,6 +62,7 @@ void detect_reiser(SECTION *section, int level);
 void detect_reiser4(SECTION *section, int level);
 void detect_linux_raid(SECTION *section, int level);
 void detect_linux_lvm(SECTION *section, int level);
+void detect_linux_lvm2(SECTION *section, int level);
 void detect_linux_swap(SECTION *section, int level);
 void detect_linux_misc(SECTION *section, int level);
 void detect_linux_loader(SECTION *section, int level);
@@ -130,6 +131,7 @@ DETECTOR detectors[] = {
   detect_reiser4,
   detect_linux_raid,
   detect_linux_lvm,
+  detect_linux_lvm2,
   detect_linux_swap,
   detect_linux_misc,
   detect_jfs,

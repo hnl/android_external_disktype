@@ -287,8 +287,8 @@ void detect_linux_lvm(SECTION *section, int level)
   print_line(level + 1, "Volume group name \"%s\"", s);
 
   /* "UUID" of this physical volume */
-  get_string(buf + 0x2c, 128, s);
-  print_line(level + 1, "PV \"UUID\" %s", s);
+  format_uuid_lvm(buf + 0x2c, s);
+  print_line(level + 1, "PV UUID %s", s);
 
   /* number of this physical volume */
   pv_number = get_le_long(buf + 432);
@@ -317,6 +317,84 @@ void detect_linux_lvm(SECTION *section, int level)
     analyze_recursive(section, level + 1,
 		      pe_start, 0, 0);
     /* TODO: elaborate on this by reading the PE allocation map */
+  }
+}
+
+/*
+ * Linux LVM2
+ */
+
+void detect_linux_lvm2(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int at, i;
+  char s[256];
+  u8 labelsector;
+  u4 labeloffset;
+  u8 pvsize, mdoffset, mdsize;
+  int mda_version;
+
+  for (at = 0; at < 4; at++) {
+    if (get_buffer(section, at * 512, 512, (void **)&buf) < 512)
+      continue;
+
+    /* check signature */
+    if (memcmp(buf, "LABELONE", 8) != 0)
+      continue;
+
+    labelsector = get_le_quad(buf + 8);
+    labeloffset = get_le_long(buf + 20);
+
+    if (memcmp(buf + 24, "LVM2 001", 8) != 0) {
+      get_string(buf + 24, 8, s);
+      print_line(level, "LABELONE label at sector %d, unknown type \"%s\"",
+		 at, s);
+      return;
+    }
+
+    print_line(level, "Linux LVM2 volume, version 001");
+    print_line(level + 1, "LABELONE label at sector %d",
+	       at);
+
+    if (labeloffset >= 512 || labelsector > 256 ||
+	labelsector != at) {
+      print_line(level + 1, "LABELONE data inconsistent, aborting analysis");
+      return;
+    }
+
+    /* "UUID" of this physical volume */
+    format_uuid_lvm(buf + labeloffset, s);
+    print_line(level + 1, "PV UUID %s", s);
+
+    /* raw volume size */
+    pvsize = get_le_quad(buf + labeloffset + 32);
+    format_size_verbose(s, pvsize);
+    print_line(level + 1, "Volume size %s", s);
+
+    /* find first metadata area in list */
+    mdoffset = 0;
+    for (i = 0; i < 16; i++)
+      if (get_le_quad(buf + labeloffset + 40 + i * 16) == 0) {
+	i++;
+	mdoffset = get_le_quad(buf + labeloffset + 40 + i * 16);
+	mdsize = get_le_quad(buf + labeloffset + 40 + i * 16 + 8);
+	break;
+      }
+    if (mdoffset == 0)
+      return;
+
+    if (get_buffer(section, mdoffset, mdsize, (void **)&buf) < mdsize)
+      return;
+
+    if (memcmp(buf + 4, " LVM2 x[5A%r0N*>", 16) != 0)
+      return;
+    mda_version = get_le_long(buf + 20);
+
+    print_line(level + 1, "Meta-data version %d", mda_version);
+
+    /* TODO: parse the metadata area (big task...) */
+
+    return;
   }
 }
 
