@@ -23,6 +23,8 @@ $(TARGET_HTML_CHUNK): $(SOURCE) $(XSL_HTML_CHUNK)
 
 $(TARGET_LATEX): $(SOURCE) $(XSL_LATEX)
 	xsltproc $(XSLFLAGS) -o $@ $(XSL_LATEX) $<
+	./fixuscore.pl <$@ >temp.tex
+	mv -f temp.tex $@
 
 $(TARGET_PDF): $(TARGET_LATEX)
 	pdflatex $<
