@@ -1,4 +1,4 @@
-$Id: TODO,v 1.10 2003/06/15 07:15:12 chrisp Exp $   -*- text -*-
+$Id: TODO,v 1.11 2003/12/30 10:10:41 chrisp Exp $   -*- text -*-
 
  disktype ToDo
 ===============
@@ -8,7 +8,7 @@ Check EVMS
 Nero CD images (.nrg)
 Other disklabels: SGI, OSF, Ultrix, Acorn, MS LDM, IBM, Minix,
   Unixware, EFI GPT
-Other FS: SGI EFS, SCO BFS, Acorn ADFS, JFFS1/2, FreeVxFS, IBM CMS FS
+Other FS: SGI EFS, SCO BFS, Acorn ADFS, JFFS1/2, IBM CMS FS
 
 Reverse-engineer the format of Apple disk images (esp. .dmg's)
 

@@ -588,4 +588,33 @@ void detect_qnx(SECTION *section, int level)
   print_line(level, "QNX4 file system");
 }
 
+/*
+ * Veritas VxFS
+ */
+
+void detect_vxfs(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int en, version;
+  u4 blocksize, blockcount;
+  char s[256];
+
+  if (get_buffer(section, 1024, 1024, (void **)&buf) < 1024)
+    return;
+
+  /* check signature */
+  for (en = 0; en < 2; en++) {
+    if (get_ve_long(en, buf) == 0xA501FCF5) {
+      version = get_ve_long(en, buf + 4);
+      print_line(level, "Veritas VxFS file system, version %d, %s",
+		 version, get_ve_name(en));
+
+      blocksize = get_ve_long(en, buf + 32);
+      blockcount = get_ve_long(en, buf + 36);
+      format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+      print_line(level + 1, "Volume size %s", s);
+    }
+  }
+}
+
 /* EOF */

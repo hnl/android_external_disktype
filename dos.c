@@ -70,7 +70,7 @@ struct systypes i386_sys_types[] = {
   { 0x3c, "PartitionMagic recovery" },
   { 0x40, "Venix 80286" },
   { 0x41, "PPC PReP Boot" },
-  { 0x42, "SFS" },
+  { 0x42, "SFS / MS LDM" },
   { 0x4d, "QNX4.x" },
   { 0x4e, "QNX4.x 2nd part" },
   { 0x4f, "QNX4.x 3rd part" },

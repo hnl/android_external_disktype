@@ -75,6 +75,7 @@ void detect_bsd_loader(SECTION *section, int level);
 void detect_solaris_disklabel(SECTION *section, int level);
 void detect_solaris_vtoc(SECTION *section, int level);
 void detect_qnx(SECTION *section, int level);
+void detect_vxfs(SECTION *section, int level);
 
 /* in beos.c */
 void detect_bfs(SECTION *section, int level);
@@ -134,6 +135,7 @@ DETECTOR detectors[] = {
   detect_ufs,
   detect_sysv,
   detect_qnx,
+  detect_vxfs,
   detect_bfs,
   /* 5: file formats */
   detect_archive,

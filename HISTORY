@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.19 2003/12/17 20:02:13 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.20 2003/12/30 10:10:41 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -77,7 +77,7 @@ Improved other structures: -
 
 Version 7 is still under development.
 
-Added file systems: 3DO CD-ROM file system.
+Added file systems: 3DO CD-ROM file system, Veritas VxFS.
 Added other structures: Sega Dreamcast signature.
 Improved file systems: HFS Plus.
 Improved other structures: -
