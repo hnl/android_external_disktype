@@ -59,9 +59,9 @@ Integer numbers larger than 8 bits are stored in several bytes, and
 there the common ground ends.
 </para>
 <para>
-In the little endian format, the least significant byte is stored
+In the <firstterm>little endian</firstterm> format, the least significant byte is stored
 first. So the hexadecimal number $FACE would be stored as $CE $FA.
-The big endian format stores the most significant byte first,
+The <firstterm>big endian</firstterm> format stores the most significant byte first,
 resulting in $FA $CE.
 </para>
 <para>
@@ -77,16 +77,16 @@ others can occur in either one. This will be noted as appropriate.
 <title>Sectors and Blocks</title>
 <para>
 Mass storage devices operate on chunks of data, usually called
-sectors. The size of these device sectors varies, but is fixed for any
-one device. Hard disks and floppies usually use 512 bytes, while CDs
+<firstterm>sectors</firstterm>. The size of these device sectors varies, but is fixed for any
+one device. Hard disks and floppies usually use 512 bytes, while data CDs
 use 2048 bytes. Today, it is usual to number all sectors sequentially
 and leave the details to the device.
 </para>
 <para>
 File systems also operate on chunks at a time, but they don't need to
 be the same size as the device's sectors. The chunks used by the file
-system are usually called blocks, but cluster, allocation block, and
-allocation unit are also common.
+system are usually called <firstterm>blocks</firstterm>, but <firstterm>cluster</firstterm>, <firstterm>allocation block</firstterm>, and
+<firstterm>allocation unit</firstterm> are also common.
 </para>
 </section>
 
@@ -96,11 +96,11 @@ allocation unit are also common.
 There were times when it was not customary to access hard disk sectors
 by their sequence number. Hard disks (and floppy disks as well) are
 actually organized in three dimensions. There are several rotating
-disks, each with two sides (or surfaces). Each surface has a head used
+disks, each with two sides (or surfaces). Each surface has a <firstterm>head</firstterm> used
 to read and write data. That head, or actually the whole stack of
 heads, can be moved between the center and the rim of the disk.  Each
-surface consists of concentric tracks, which contain the actual
-sectors. A cylinder is all tracks of all surfaces at a certain radius
+surface consists of concentric <firstterm>tracks</firstterm>, which contain the actual
+sectors. A <firstterm>cylinder</firstterm> is all tracks of all surfaces at a certain radius
 taken together. Put another way, all sectors in one cylinder can be
 accessed without moving the head stack. When it comes to coordinates,
 track and cylinder are interchangeable terms.
@@ -119,7 +119,7 @@ more complex and more intelligent, both reasons vanished.
 <title>Partitioning</title>
 <para>
 Hard disks are usually partitioned. That means they are divided into
-independent sections called partitions or slices. The operating
+independent sections called <firstterm>partitions</firstterm> or <firstterm>slices</firstterm>. The operating
 system treats each partition as if it was a separate device. Thus
 partitions can be used for different purposes and can use different
 formats.
@@ -129,7 +129,7 @@ Unfortunately, partitions don't come out of nowhere. Their locations
 must be recorded on the disk itself, usually in the first few
 sectors. Naturally, there are just as many such partitioning schemes
 as there are vendors. The data that records partitions is called the
-partition map, partition table, or disklabel.
+<firstterm>partition map</firstterm>, <firstterm>partition table</firstterm>, or <firstterm>disklabel</firstterm>.
 </para>
 <para>
 At least on the PC there is something of a standard partitioning
@@ -141,7 +141,7 @@ other operating systems to co-exist on the disk.
 </section>
 
 <section>
-<title>Block Allocation</title>
+<title>Superblocks and Spacing</title>
 <para>
 [to be written]
 </para>
@@ -154,14 +154,30 @@ other operating systems to co-exist on the disk.
 </para>
 </section>
 
-<!--
 <section>
-<title>[title]</title>
+<title>Block Allocation</title>
 <para>
-[to be written]
+All read-write file systems have to deal with the problem of assigning blocks to files. There are actually two problems that may be solved separately: finding a free block (which requires remembering which blocks are free and which are not), and remembering the blocks that store the data of a certain file.
+</para>
+<para>
+The first distinguishing feature is the use of <firstterm>extents</firstterm>.
+An extent specifies a range of blocks by giving the first block's number and
+the length of the range in blocks. The alternative is to store each block's number separately, which usually takes more space, but is slightly simpler to handle.
+</para>
+<para>
+Many file systems use an <firstterm>allocation bitmap</firstterm> to store
+which blocks are used. That bitmap requires one bit per useable block.
+Searching such a bitmap can be quite slow. Some file systems cache
+a short list of free blocks, which can be updated in the background.
+</para>
+<para>
+The traditional Unix way to store the blocks that make up a file
+doesn't use extents, but a block number list. The first few numbers are stored
+in the inode structure; these are called <firstterm>direct blocks</firstterm>.
+If that space is exhausted, one block is allocated to store further block numbers. Only the block number of this <firstterm>indirect block</firstterm> is stored in the inode structure. If that space is also exhausted, the method is applied recursively, leading to double-indirect and sometimes triple-indirect blocks.
 </para>
 </section>
--->
+
 
 </chapter>
 
@@ -335,8 +351,18 @@ the actual volume.
 </para>
 <para>
 &disktype; recognizes both wrapped and non-wrapped HFS+ volumes. A
-wrapped volume will report accordingly.
+wrapped volume will report accordingly, like in the following example:
 </para>
+<screen>
+--- hfs-plus-wrapped.image
+Regular file, size 8388608 bytes (8.00M)
+HFS file system
+  Volume name "HFS Plus Wrapped"
+  Volume size 7.99M (2046 blocks of 4096 bytes)
+HFS wrapper for HFS Plus
+  HFS Plus file system
+    Volume size 7.95M (2036 blocks of 4096 bytes)
+</screen>
 <para>
 For some reason, the HFS+ volume header does not include the volume
 name. I assume that it is stored in the catalog (i.e. the volume's
@@ -468,9 +494,28 @@ the page of the ext2 tools.
 <section>
 <title>ReiserFS</title>
 <para>
-[to be written]
-<!-- written for efficiency, especially with large number of files
-per directories and large numbers of small files. Journalling. -->
+ReiserFS was written with efficiency in mind.
+It handles large numbers of files per directory and large numbers
+of small files in general better than most traditional file systems.
+It makes extensive use of balanced trees and also provides meta-data
+journalling.
+</para>
+<para>
+There are two major versions of the on-disk format, 3.5 and 3.6.
+ReiserFS on Linux 2.2 only supports the 3.5 format.
+Linux 2.4 ships with ReiserFS in the mainstream kernel,
+supports both formats, and is able to upgrade a file system
+on the fly to the new format. The two formats use two different magic strings
+in the superblock. A third magic string is used for non-standard journal
+sizes. (It seems this feature was added only recently and isn't actually
+supported by the mainstream Linux kernel yet.)
+In this case, the format is determined by an additional field in the
+superblock.
+</para>
+<para>
+ReiserFS puts the superblock 64K into the device; some earlier versions
+put it 8K into the device. That allows complex boot loaders like GRUB
+to reside completely in the space before the actual file system.
 </para>
 <para>
 Information on ReiserFS can be found at
