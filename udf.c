@@ -45,6 +45,8 @@ void detect_udf(SECTION *section, int level)
                                    /*   B     E     A     0     1  */
   unsigned char sig_nsr2[7] = {0x00, 0x4e, 0x53, 0x52, 0x30, 0x32, 0x01};
                                    /*   N     S     R     0     2  */
+  unsigned char sig_nsr3[7] = {0x00, 0x4e, 0x53, 0x52, 0x30, 0x33, 0x01};
+                                   /*   N     S     R     0     3  */
   unsigned char sig_tea[7]  = {0x00, 0x54, 0x45, 0x41, 0x30, 0x31, 0x01};
                                    /*   T     E     A     0     1  */
 
@@ -70,7 +72,8 @@ void detect_udf(SECTION *section, int level)
       recog_state = 1;
     if (recog_state == 1 && memcmp(buffer, sig_tea, 7) == 0)
       recog_state = 0;
-    if (recog_state == 1 && memcmp(buffer, sig_nsr2, 7) == 0) {
+    if (recog_state == 1 && (memcmp(buffer, sig_nsr2, 7) == 0 ||
+			     memcmp(buffer, sig_nsr3, 7) == 0)) {
       detected = 1;
       break;
     }
@@ -106,7 +109,7 @@ static int probe_udf(SECTION *section, int level, int sector_size)
   int seen_primary = 0;
   int seen_logical = 0;
   int i;
-  char s[256];
+  char s[256], unicode[32];
 
   /* first read the Anchor Volume Descriptor Pointer @ sector 256 */
   if (get_buffer(section, 256 * sector_size, 512, (void **)&buffer) < 512)
@@ -141,6 +144,12 @@ static int probe_udf(SECTION *section, int level, int sector_size)
 	if (buffer[24] == 8) {
 	  get_string(buffer + 25, 30, s);
 	  print_line(level+1, "Volume name \"%s\"", s);
+	} else if (buffer[24] == 16) {
+	  memcpy(unicode, buffer + 25, 30);
+	  unicode[30] = 0;
+	  unicode[31] = 0;
+	  format_unicode(unicode, s);
+	  print_line(level+1, "Volume name \"%s\"", s);
 	} else {
 	  print_line(level+1, "Volume name encoding not supported");
 	}
@@ -153,7 +162,7 @@ static int probe_udf(SECTION *section, int level, int sector_size)
 	seen_logical = 1;
 
 	if (memcmp(buffer + 216+1, "*OSTA UDF Compliant", 19) == 0) {
-	  print_line(level+1, "UDF version %d.%02d",
+	  print_line(level+1, "UDF version %x.%02x",
 		     (int)buffer[216+25], (int)buffer[216+24]);
 	}
 
