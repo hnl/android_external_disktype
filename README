@@ -1,4 +1,4 @@
-$Id: README,v 1.4 2003/03/14 09:07:40 chrisp Exp $   -*- text -*-
+$Id: README,v 1.5 2003/03/14 16:20:16 chrisp Exp $   -*- text -*-
 
  disktype 3
 ============
@@ -43,7 +43,7 @@ The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
   ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs, UFS (some
-  variations).
+  variations), JFS.
 
 Partition maps: DOS/PC style, Apple.
 
@@ -60,11 +60,10 @@ compression program must be installed on the system, i.e. 'gzip' for
 the gzip and compress formats, 'bzip2' for the bzip2 format.
 
 Raw-mode CD images (e.g. the .bin file of a .bin/.cue pair) are
-recognized by size (multiple of 2352 bytes) and translated
-transparently. This mechanism is quite crude -- it doesn't know the
-exact mode and has to guess, it doesn't know about multiple tracks,
-and so on -- but it seems sufficient to look inside most .bin/.cue
-images.
+recognized and translated transparently. Since version 3 this actually
+looks at the data instead of guessing based on file size. It still
+doesn't know about multiple tracks or sessions, but seems to be
+sufficient even for (S)VCD disks.
 
 
  Future Plans
