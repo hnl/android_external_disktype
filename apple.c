@@ -163,4 +163,25 @@ void detect_apple_volume(SECTION *section, int level)
   }
 }
 
+/*
+ * Apple UDIF disk images
+ */
+
+void detect_udif(SECTION *section, int level)
+{
+  u8 pos;
+  unsigned char *buf;
+
+  if (section->size < 1024 || section->source->sequential)
+    return;
+
+  pos = section->size - 512;
+  if (get_buffer(section, pos, 512, (void **)&buf) < 512)
+    return;
+
+  if (memcmp(buf, "koly", 4) == 0) {
+    print_line(level, "Apple UDIF disk image, content detection may or may not work...");
+  }
+}
+
 /* EOF */

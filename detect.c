@@ -38,6 +38,7 @@ void detect_amiga_fs(SECTION *section, int level);
 /* in apple.c */
 void detect_apple_partmap(SECTION *section, int level);
 void detect_apple_volume(SECTION *section, int level);
+void detect_udif(SECTION *section, int level);
 
 /* in atari.c */
 void detect_atari_partmap(SECTION *section, int level);
@@ -87,6 +88,7 @@ DETECTOR detectors[] = {
   /* 1: disk image formats */
   detect_vhd,            /* may stop */
   detect_cdimage,        /* may stop */
+  detect_udif,
   /* 2: boot code */
   detect_linux_loader,
   detect_bsd_loader,
