@@ -516,6 +516,7 @@ superblock.
 ReiserFS puts the superblock 64K into the device; some earlier versions
 put it 8K into the device. That allows complex boot loaders like GRUB
 to reside completely in the space before the actual file system.
+All data is stored in little-endian byte order.
 </para>
 <para>
 Information on ReiserFS can be found at
