@@ -42,7 +42,9 @@ void detect_ext23(SECTION *section, int level)
     return;
 
   if (get_le_short(buf + 56) == 0xEF53) {
-    if (get_le_long(buf + 92) & 0x0004)  /* HAS_JOURNAL flag */
+    if (get_le_long(buf + 92) & 0x0008)       /* JOURNAL_DEV flag */
+      print_line(level, "Ext3 external journal");
+    else if (get_le_long(buf + 92) & 0x0004)  /* HAS_JOURNAL flag */
       print_line(level, "Ext3 file system");
     else
       print_line(level, "Ext2 file system");
