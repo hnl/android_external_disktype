@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.14 2003/05/01 08:57:32 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.15 2003/05/03 11:10:23 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -51,14 +51,14 @@ Improved file systems: FAT12/FAT16 (a.k.a. ATARI GEMDOS).
 Improved other structures: -
 
 
-Version 5 is still under development. It includes a range of
+Version 5 was released on May 3, 2003. It includes a range of
 portability fixes. Most importantly, character devices are no longer
 blocked out; some systems use them for disks. There is also a range of
 internal improvements. In other news:
 
 Added file systems: BeFS, QNX4, SysV (some variants).
 Added other structures: BSD disklabel, FreeBSD i386 boot code, Virtual
-  PC hard disk images.
+  PC hard disk image, Apple UDIF disk image (limited).
 Improved file systems: UFS, ext2/ext3.
 Improved other structures: DOS partition map, GRUB boot code.
 
