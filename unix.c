@@ -52,6 +52,9 @@ void detect_ext23(SECTION *section, int level)
     if (s[0])
       print_line(level + 1, "Volume name \"%s\"", s);
 
+    format_uuid(buf + 104, s);
+    print_line(level + 1, "UUID %s", s);
+
     memcpy(s, buf + 136, 64);
     s[64] = 0;
     if (s[0])
@@ -62,9 +65,6 @@ void detect_ext23(SECTION *section, int level)
     format_size(s, blockcount, blocksize);
     print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
 	       s, blockcount, blocksize);
-
-    format_uuid(buf + 104, s);
-    print_line(level + 1, "UUID %s", s);
 
     /* 76 4 s_rev_level */
     /* 62 2 s_minor_rev_level */
@@ -125,13 +125,13 @@ void detect_reiser(SECTION *section, int level)
     if (s[0])
       print_line(level + 1, "Volume name \"%s\"", s);
 
+    format_uuid(buf + 84, s);
+    print_line(level + 1, "UUID %s", s);
+
     /* print size */
     format_size(s, blockcount, blocksize);
     print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
 	       s, blockcount, blocksize);
-
-    format_uuid(buf + 84, s);
-    print_line(level + 1, "UUID %s", s);
 
     /* TODO: print hash code */
   }
@@ -199,6 +199,9 @@ void detect_xfs(SECTION *section, int level)
   s[12] = 0;
   print_line(level + 1, "Volume name \"%s\"", s);
 
+  format_uuid(buf + 32, s);
+  print_line(level + 1, "UUID %s", s);
+
   blocksize = get_be_long(buf + 4);
   blockcount = get_be_quad(buf + 8);
   format_size(s, blockcount, blocksize);
@@ -227,6 +230,8 @@ void detect_linux_raid(SECTION *section, int level)
   unsigned char *buf;
   u8 pos;
   int rlevel, nr_disks, raid_disks, spare;
+  u1 uuid[16];
+  char s[256];
 
   /* don't do this if:
    *  - the size is unknown (0)
@@ -245,7 +250,7 @@ void detect_linux_raid(SECTION *section, int level)
   if (get_le_long(buf) != 0xa92b4efc)
     return;
 
-  print_line(level, "Linux RAID disk, version %ld.%ld.%ld",
+  print_line(level, "Linux RAID disk, version %lu.%lu.%lu",
 	     get_le_long(buf + 4), get_le_long(buf + 8),
 	     get_le_long(buf + 12));
 
@@ -263,6 +268,12 @@ void detect_linux_raid(SECTION *section, int level)
     print_line(level + 1, "%s set using %d regular %d spare disks",
 	       levels[rlevel+4], raid_disks, spare);
   }
+
+  /* get the UUID */
+  memcpy(uuid, buf + 5*4, 4);
+  memcpy(uuid + 4, buf + 13*4, 3*4);
+  format_uuid(uuid, s);
+  print_line(level + 1, "RAID set UUID %s", s);
 }
 
 /*
