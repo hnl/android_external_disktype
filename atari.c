@@ -90,7 +90,7 @@ void detect_atari_partmap(SECTION *section, int level)
     if ((flag & 1) == 0)
       continue;
 
-    sprintf(append, " starting at %lu", start);
+    sprintf(append, " from %lu", start);
     if (flag & 0x80)
       strcat(append, ", bootable");
     format_blocky_size(s, size, 512, "sectors", append);
@@ -151,7 +151,7 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
       } else {
 	/* real partition */
 
-	sprintf(append, " starting at %lu", start);
+	sprintf(append, " from %lu", start);
 	format_blocky_size(s, size, 512, "sectors", append);
 	print_line(level, "Partition %d: %s",
 		   extpartnum, s);

@@ -197,7 +197,7 @@ void detect_dos_partmap(SECTION *section, int level)
     if (start == 0 || size == 0)
       continue;
 
-    sprintf(append, " starting at %lu", start);
+    sprintf(append, " from %lu", start);
     if (bootflags[i] == 0x80)
       strcat(append, ", bootable");
     format_blocky_size(s, size, 512, "sectors", append);
@@ -261,7 +261,7 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
       } else {
 	/* logical partition */
 
-	sprintf(append, " starting at %llu+%lu", tablebase, start);
+	sprintf(append, " from %llu+%lu", tablebase, start);
 	format_blocky_size(s, size, 512, "sectors", append);
 	print_line(level, "Partition %d: %s",
 		   *extpartnum, s);

@@ -171,11 +171,15 @@ void format_blocky_size(char *buf, u8 count, u4 blocksize,
     p = strchr(buf, 0);
   }
 
-  if (blocksize < 64*1024 && (blocksize % 1024) != 0)
-    sprintf(blocksizebuf, "%lu bytes", blocksize);
-  else
-    format_raw_size(blocksizebuf, blocksize);
-  sprintf(p, "%llu %s of %s", count, blockname, blocksizebuf);
+  if (blocksize == 512 && strcmp(blockname, "sectors") == 0) {
+    sprintf(p, "%llu %s", count, blockname);
+  } else {
+    if (blocksize < 64*1024 && (blocksize % 1024) != 0)
+      sprintf(blocksizebuf, "%lu bytes", blocksize);
+    else
+      format_raw_size(blocksizebuf, blocksize);
+    sprintf(p, "%llu %s of %s", count, blockname, blocksizebuf);
+  }
   p = strchr(buf, 0);
 
   if (append != NULL) {

@@ -89,7 +89,7 @@ void detect_amiga_partmap(SECTION *section, int level)
     start = get_be_long(buf + 164) * cylsize;
     size = (get_be_long(buf + 168) + 1 - get_be_long(buf + 164)) * cylsize;
 
-    snprintf(append, 63, " starting at %llu", start);
+    snprintf(append, 63, " from %llu", start);
     format_blocky_size(s, size, 512, "sectors", append);
     print_line(level, "Partition %d: %s",
                i, s);

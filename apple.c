@@ -79,7 +79,7 @@ void detect_apple_partmap(SECTION *section, int level)
     /* get position and size */
     start = get_be_long(buf + 8);
     size = get_be_long(buf + 12);
-    sprintf(append, " starting at %llu", start);
+    sprintf(append, " from %llu", start);
     format_blocky_size(s, size, 512, "sectors", append);
     print_line(level, "Partition %d: %s",
 	       i, s);

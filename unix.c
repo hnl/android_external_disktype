@@ -327,7 +327,7 @@ void detect_bsd_disklabel(SECTION *section, int level)
     if (types[i] == 0 && i != 2)
       continue;
 
-    sprintf(append, " starting at %lu", starts[i]);
+    sprintf(append, " from %lu", starts[i]);
     format_blocky_size(s, sizes[i], 512, "sectors", append);
     print_line(level, "Partition %c: %s",
 	       pn, s);
@@ -469,7 +469,7 @@ void detect_solaris_vtoc(SECTION *section, int level)
     if (sizes[i] == 0)
       continue;
 
-    sprintf(append, " starting at %lu", starts[i]);
+    sprintf(append, " from %lu", starts[i]);
     format_blocky_size(s, sizes[i], 512, "sectors", append);
     print_line(level, "Partition %d: %s",
 	       i, s);
