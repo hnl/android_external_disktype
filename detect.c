@@ -49,7 +49,15 @@ void detect_ext23(SECTION *section, int level);
 void detect_reiser(SECTION *section, int level);
 void detect_linux_raid(SECTION *section, int level);
 void detect_linux_lvm(SECTION *section, int level);
+void detect_linux_swap(SECTION *section, int level);
+void detect_ufs(SECTION *section, int level);
 void detect_unix_misc(SECTION *section, int level);
+
+/* in compressed.c */
+void detect_compressed(SECTION *section, int level);
+
+/* in archives.c */
+void detect_archive(SECTION *section, int level);
 
 /*
  * general detectors
@@ -67,7 +75,11 @@ DETECTOR detectors[] = {
   detect_reiser,
   detect_linux_raid,
   detect_linux_lvm,
+  detect_linux_swap,
+  detect_ufs,
   detect_unix_misc,
+  detect_archive,
+  detect_compressed,
  NULL };
 
 /*
@@ -76,30 +88,15 @@ DETECTOR detectors[] = {
 
 void detect(SECTION *section, int level)
 {
-  int i, fill;
-  unsigned char *buf;
+  int i;
 
-  fill = get_buffer(section, 0, 4096, (void **)&buf);
-  if (fill < 512) {
-    print_line(level, "Not enough data for analysis");
-    return;
-  }
-
-  /* gzip */
-  for (i = 0; i < 32 && i < (fill >> 9); i++) {
-    int off = i << 9;
-    if (buf[off] == 037 && (buf[off+1] == 0213 || buf[off+1] == 0236)) {
-      print_line(level, "gzip magic at sector %d", i);
-      break;
-    }
-  }
-
-  /* now run the modularized detectors */
+  /* run the modularized detectors */
   for (i = 0; detectors[i]; i++)
     (*detectors[i])(section, level);
 
   /* check size for possible raw CD image */
-  if (section->size && (section->size % 2352) == 0) {
+  if (section->size && section->size < (1 << 30) &&
+      (section->size % 2352) == 0) {
     int headlens[] = { 16, 24, -1 };
     SOURCE *s;
     SECTION rs;

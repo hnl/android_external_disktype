@@ -42,7 +42,10 @@ void detect_ext23(SECTION *section, int level)
     return;
 
   if (get_le_short(buf + 56) == 0xEF53) {
-    print_line(level, "Ext2/Ext3 file system");
+    if (get_le_long(buf + 92) & 0x0004)  /* HAS_JOURNAL flag */
+      print_line(level, "Ext3 file system");
+    else
+      print_line(level, "Ext2 file system");
 
     memcpy(s, buf + 120, 16);
     s[16] = 0;
@@ -77,7 +80,7 @@ void detect_reiser(SECTION *section, int level)
   unsigned char *buf;
   int i, at, offsets[3] = { 8, 64, -1 };
   char s[256];
-  int blocksize;
+  int blocksize, newformat;
   int8 blockcount;
 
   for (i = 0; offsets[i] >= 0; i++) {
@@ -87,9 +90,22 @@ void detect_reiser(SECTION *section, int level)
 
     /* check signature */
     if (memcmp(buf + 52, "ReIsErFs", 8) == 0) {
-      print_line(level, "ReiserFS file system (old 3.5 format @ %dK)", at);
+      print_line(level, "ReiserFS file system (old 3.5 format, standard journal, starts at %dK)", at);
+      newformat = 0;
     } else if (memcmp(buf + 52, "ReIsEr2Fs", 9) == 0) {
-      print_line(level, "ReiserFS file system (new 3.6 format @ %dK)", at);
+      print_line(level, "ReiserFS file system (new 3.6 format, standard journal, starts at %dK)", at);
+      newformat = 1;
+    } else if (memcmp(buf + 52, "ReIsEr3Fs", 9) == 0) {
+      newformat = get_le_short(buf + 72);
+      if (newformat == 0) {
+	print_line(level, "ReiserFS file system (old 3.5 format, non-standard journal, starts at %dK)", at);
+      } else if (newformat == 2) {
+	print_line(level, "ReiserFS file system (new 3.6 format, non-standard journal, starts at %dK)", at);
+	newformat = 1;
+      } else {
+	print_line(level, "ReiserFS file system (v3 magic, but unknown version %d, starts at %dK)", newformat, at);
+	continue;
+      }
     } else
       continue;
 
@@ -98,7 +114,6 @@ void detect_reiser(SECTION *section, int level)
     blocksize = get_le_short(buf + 44);
     /* for new format only:
        hashtype = get_le_long(buf + 64);
-       version = get_le_short(buf + 72);
     */
     /* 84, 16 bytes: UUID */
 
@@ -113,7 +128,7 @@ void detect_reiser(SECTION *section, int level)
     print_line(level + 1, "Volume size %s (%lld blocks of %d bytes)",
 	       s, blockcount, blocksize);
 
-    /* TODO: print hash code, version */
+    /* TODO: print hash code, UUID */
   }
 }
 
@@ -226,16 +241,105 @@ void detect_linux_lvm(SECTION *section, int level)
 }
 
 /*
+ * Linux swap area
+ */
+
+void detect_linux_swap(SECTION *section, int level)
+{
+  int i, en, pagesize;
+  unsigned char *buf;
+  u4 version, pages;
+  char s[256];
+  int pagesizes[] = { 4096, 8192, 0 };
+
+  for (i = 0; pagesizes[i]; i++) {
+    pagesize = pagesizes[i];
+
+    if (get_buffer(section, pagesize - 512, 512, (void **)&buf) != 512)
+      break;  /* assumes page sizes increase through the loop */
+
+    if (memcmp((char *)buf + 512 - 10, "SWAP-SPACE", 10) == 0) {
+      print_line(level, "Linux swap, version 1, %dK pages",
+		 pagesize >> 10);
+    }
+    if (memcmp((char *)buf + 512 - 10, "SWAPSPACE2", 10) == 0) {
+      if (get_buffer(section, 1024, 512, (void **)&buf) != 512)
+	break;  /* really shouldn't happen */
+
+      for (en = 0; en < 2; en++) {
+	version = get_ve_long(en, buf);
+	if (version >= 1 && version < 10)
+	  break;
+      }
+      if (en < 2) {
+	print_line(level, "Linux swap, version 2, subversion %d, %dK pages, %s",
+		   (int)version, pagesize >> 10, get_ve_name(en));
+	if (version == 1) {
+	  pages = get_ve_long(en, buf + 4) - 1;
+	  format_size(s, pages, pagesize);
+	  print_line(level + 1, "Swap size %s (%lu pages)",
+		     s, pages);
+	}
+      } else {
+	print_line(level, "Linux swap, version 2, illegal subversion, %dK pages",
+		   pagesize >> 10);
+      }
+    }
+  }
+}
+
+/*
+ * UFS file system from various BSD strains
+ */
+
+void detect_ufs(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int i, at, en, offsets[3] = { 16, -1 };
+  u4 magic;
+
+  /* NextStep/OpenStep apparently can move the superblock further into
+     the device. Linux uses steps of 8 blocks (of the applicable block
+     size) to scan for it. We only scan at the canonical location for now. */
+  /* Possible block sizes: 512 (old formats), 1024 (most), 2048 (CD media) */
+
+  for (i = 0; offsets[i] >= 0; i++) {
+    at = offsets[i];
+    if (get_buffer(section, at * 512, 1536, (void **)&buf) < 1536)
+      break;
+
+    for (en = 0; en < 2; en++) {
+      magic = get_ve_long(en, buf + 1372);
+
+      if (magic == 0x00011954) {
+	print_line(level, "UFS file system, %s",
+		   get_ve_name(en));
+      } else if (magic == 0x00095014) {
+	print_line(level, "UFS file system, long file names, %s",
+		   get_ve_name(en));
+      } else if (magic == 0x00195612) {
+	print_line(level, "UFS file system, fs_featurebits, %s",
+		   get_ve_name(en));
+      } else if (magic == 0x05231994) {
+	print_line(level, "UFS file system, fs_featurebits, >4GB support, %s",
+		   get_ve_name(en));
+      }
+    }
+  }
+}
+
+/*
  * various signatures
  */
 
 void detect_unix_misc(SECTION *section, int level)
 {
-  int magic, fill, off, pagesize;
+  int magic, fill, off, en;
   unsigned char *buf;
   char s[256];
+  u8 size, blocks;
 
-  fill = get_buffer(section, 0, 8192, (void **)&buf);
+  fill = get_buffer(section, 0, 2048, (void **)&buf);
   if (fill < 512)
     return;
 
@@ -262,6 +366,7 @@ void detect_unix_misc(SECTION *section, int level)
   if (fill >= 2048) {
     int version = 0, namesize = 14;
     u8 blocks;
+
     magic = get_le_short(buf + 1024 + 16);
     if (magic == 0x137F)
       version = 1;
@@ -301,63 +406,25 @@ void detect_unix_misc(SECTION *section, int level)
 
   /* Linux cramfs */
   for (off = 0; off <= 512; off += 512) {
-    int hit = 0;
-    u8 size, blocks;
-
     if (fill < off + 512)
       break;
-    if (get_le_long(buf + off) == 0x28cd3d45) {
-      print_line(level, "Linux cramfs, starts sector %d, little-endian",
-		 off >> 9);
-      hit = 1;
-      size = get_le_long(buf + off + 4);
-      blocks = get_le_long(buf + off + 40);
-    }
-    if (get_be_long(buf + off) == 0x28cd3d45) {
-      print_line(level, "Linux cramfs, starts sector %d, big-endian",
-		 off >> 9);
-      hit = 1;
-      size = get_be_long(buf + off + 4);
-      blocks = get_be_long(buf + off + 40);
-    }
-    if (hit) {
-      memcpy(s, buf + off + 48, 16);
-      s[16] = 0;
-      print_line(level + 1, "Volume name \"%s\"", s);
-      format_size(s, size, 1);
-      print_line(level + 1, "Compressed size %s (%llu bytes)",
-		 s, size);
-      format_size(s, blocks, 4096);
-      print_line(level + 1, "Data size %s (%llu blocks of -assumed- 4K)",
-		 s, blocks);
-    }
-  }
+    for (en = 0; en < 2; en++) {
+      if (get_ve_long(en, buf + off) == 0x28cd3d45) {
+	print_line(level, "Linux cramfs, starts sector %d, %s",
+		   off >> 9, get_ve_name(en));
 
-  /* Linux swap */
-  for (pagesize = 4096; pagesize <= 8192 && fill >= pagesize; pagesize <<= 1) {
-    if (memcmp((char *)buf + pagesize - 10, "SWAP-SPACE", 10) == 0) {
-      print_line(level, "Linux swap, version 1, %dK pages",
-		 pagesize >> 10);
-    }
-    if (memcmp((char *)buf + pagesize - 10, "SWAPSPACE2", 10) == 0) {
-      u4 version, pages = 0;
-      version = get_le_long(buf + 1024);
-      if (version >= 1 && version < 10) {
-	print_line(level, "Linux swap, version 2, subversion %d, %dK pages, little-endian",
-		   (int)version, pagesize >> 10);
-	if (version == 1)
-	  pages = get_le_long(buf + 1024 + 4) - 1;
-      } else {
-	version = get_be_long(buf + 1024);
-	print_line(level, "Linux swap, version 2, subversion %d, %dK pages, big-endian",
-		   (int)version, pagesize >> 10);
-	if (version == 1)
-	  pages = get_be_long(buf + 1024 + 4) - 1;
-      }
-      if (pages) {
-	format_size(s, pages, pagesize);
-	print_line(level + 1, "Swap size %s (%lu pages)",
-		   s, pages);
+	memcpy(s, buf + off + 48, 16);
+	s[16] = 0;
+	print_line(level + 1, "Volume name \"%s\"", s);
+
+	size = get_ve_long(en, buf + off + 4);
+	blocks = get_ve_long(en, buf + off + 40);
+	format_size(s, size, 1);
+	print_line(level + 1, "Compressed size %s (%llu bytes)",
+		   s, size);
+	format_size(s, blocks, 4096);
+	print_line(level + 1, "Data size %s (%llu blocks of -assumed- 4K)",
+		   s, blocks);
       }
     }
   }

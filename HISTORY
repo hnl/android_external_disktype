@@ -22,4 +22,15 @@ Improved file systems: ISO9660, Minix.
 Improved other structures: Linux swap.
 
 
+Version 3 is still under development. It features an extensive
+re-write of the buffering layer, in conjunction with transparent
+decompression of gzip- or compress-compressed data. In other news:
+
+Added file systems: UFS (some variations).
+Added other structures: tar archives, cpio archives, bar archives,
+  dump/restore data.
+Improved file systems: ext2/ext3, ReiserFS.
+Improved other structures: Linux swap.
+
+
 EOF

@@ -1,0 +1,17 @@
+ disktype ToDo
+===============
+
+Add XFS
+Add JFS
+Check NTFS, HPFS, FAT stuff
+Add *BSD disklabel
+Add Apple-style UFS
+Add UDF (DVDs)
+Other disklabels: Solaris, Sun, SGI, OSF, Ultrix, Amiga, Acorn, LDM,
+  IBM, Minix, Unixware
+Other FS: EFS, BFS, FFS, AFFS, ADFS, JFFS1/2, QNX4 FS, SysV FS,
+  FreeVxFS
+
+Superblocks document
+
+Reverse-engineer the format of Apple disk images (esp. .dmg's)

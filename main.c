@@ -334,7 +334,7 @@ void format_unicode(char *from, char *to)
 }
 
 /*
- * data access
+ * endian-aware data access
  */
 
 unsigned int get_be_short(void *from)
@@ -394,6 +394,42 @@ unsigned long long get_le_quad(void *from)
     ((unsigned long long)(p[1]) << 8) +
     (unsigned long long)p[0];
 }
+
+unsigned int get_ve_short(int endianess, void *from)
+{
+  if (endianess)
+    return get_le_short(from);
+  else
+    return get_be_short(from);
+}
+
+unsigned long get_ve_long(int endianess, void *from)
+{
+  if (endianess)
+    return get_le_long(from);
+  else
+    return get_be_long(from);
+}
+
+unsigned long long get_ve_quad(int endianess, void *from)
+{
+  if (endianess)
+    return get_le_quad(from);
+  else
+    return get_be_quad(from);
+}
+
+const char * get_ve_name(int endianess)
+{
+  if (endianess)
+    return "little-endian";
+  else
+    return "big-endian";
+}
+
+/*
+ * more data access
+ */
 
 void get_pstring(void *from, char *to)
 {

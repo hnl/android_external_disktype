@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 /* types */
 
@@ -96,7 +97,7 @@ void format_size(char *buf, int8 size, int mult);
 void format_ascii(char *from, char *to);
 void format_unicode(char *from, char *to);
 
-/* data access */
+/* endian-aware data access */
 
 unsigned int       get_be_short(void *from);
 unsigned long      get_be_long(void *from);
@@ -105,6 +106,14 @@ unsigned long long get_be_quad(void *from);
 unsigned int       get_le_short(void *from);
 unsigned long      get_le_long(void *from);
 unsigned long long get_le_quad(void *from);
+
+unsigned int       get_ve_short(int endianess, void *from);
+unsigned long      get_ve_long(int endianess, void *from);
+unsigned long long get_ve_quad(int endianess, void *from);
+
+const char *       get_ve_name(int endianess);
+
+/* more data access */
 
 void get_pstring(void *from, char *to);
 

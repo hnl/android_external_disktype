@@ -1,4 +1,4 @@
- disktype 2
+ disktype 3
 ============
 
 The purpose of disktype is to detect the content format of a disk or
@@ -19,7 +19,7 @@ GCC, but can be edited if required. Alternatively, the standard
 variables CC, CPPFLAGS, CFLAGS, LDFLAGS, and LIBS can be changed from
 the make command line.
 
-Running make results in the binary `disktype'. Copy it to a `bin'
+Running make results in the binary 'disktype'. Copy it to a 'bin'
 directory of your choice, optionally stripping it on the way. That's
 all.
 
@@ -27,7 +27,7 @@ all.
  Usage
 -------
 
-The `disktype' program can be run with any number of regular files or
+The 'disktype' program can be run with any number of regular files or
 block devices as arguments. They will be analyzed in the order
 given, and the results printed to standard output. There are no
 switches in this version. Note that running disktype on block devices
@@ -40,17 +40,24 @@ like your hard disk will likely require root rights.
 The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
-  ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs.
+  ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs, UFS (some
+  variations).
 
 Partition maps: DOS/PC style, Apple.
 
 Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel.
 
-Other structures: Debian split floppy header, gzip header, Linux swap,
-  Linux RAID physical disks, Linux LVM physical volumes.
+Archive formats: gzip, compress, tar, cpio, bar, dump/restore.
 
-In addition, raw-mode CD images (e.g. the .bin file of a .bin/.cue
-pair) are recognized by size (multiple of 2352 bytes) and translated
+Other structures: Debian split floppy header, Linux swap, Linux RAID
+  physical disks, Linux LVM physical volumes.
+
+Compressed files (gzip and compress formats) will also have their
+contents analyzed using transparent decompression. This requires that
+the 'gzip' command is installed on the system.
+
+Raw-mode CD images (e.g. the .bin file of a .bin/.cue pair) are
+recognized by size (multiple of 2352 bytes) and translated
 transparently. This mechanism is quite crude -- it doesn't know the
 exact mode and has to guess, it doesn't know about multiple tracks,
 and so on -- but it seems sufficient to look inside most .bin/.cue
