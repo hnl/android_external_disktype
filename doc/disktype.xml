@@ -1,0 +1,673 @@
+<?xml version="1.0"?>
+<!DOCTYPE book SYSTEM "/sw/share/xml/dtd/docbookx/4.1.2/docbookx.dtd">
+
+<book>
+<bookinfo>
+<title>disktype Documentation</title>
+
+<author>
+  <surname>Pfisterer</surname>
+  <firstname>Christoph</firstname>
+</author>
+<copyright>
+  <year>2003</year>
+  <holder>Christoph Pfisterer</holder>
+</copyright>
+</bookinfo>
+
+
+
+<chapter>
+<title>Introduction</title>
+
+<para>
+Welcome to the <application>disktype</application> documentation.
+</para>
+<para>
+The main purpose of this document is to provide background information
+on the file systems and other formats recognized,
+enabling you to better understand the output of <application>disktype</application>.
+It also serves as a repository of pointers to further documentation,
+for those interested in file systems and disk formats.
+</para>
+
+</chapter>
+
+
+
+<chapter>
+<title>Coming To Terms</title>
+
+<para>
+This chapter wants to prepare you for the wealth of terms invented by
+file system designers.
+Once you know what the typical elements of a file system are,
+it'll be much easier to map proprietary terms to your mind model.
+</para>
+
+<section>
+<title>Byte Ordering</title>
+<para>
+The byte has been universally accepted as the atomic entity of data
+storage for some decades now. But beyond that, you're on your own.
+Integer numbers larger than 8 bits are stored in several bytes, and
+there the common ground ends.
+</para>
+<para>
+In the little endian format, the least significant byte is stored
+first. So the hexadecimal number $FACE would be stored as $CE $FA.
+The big endian format stores the most significant byte first,
+resulting in $FA $CE.
+</para>
+<para>
+Most CPUs have a preferred or native format. Data in the other format
+can only be accessed with a performance penalty. As a result, everyone
+tries to use their platform's native byte order. As you'll see later
+on, some formats are defined to use a specific byte order, while
+others can occur in either one. This will be noted as appropriate.
+</para>
+</section>
+
+<section>
+<title>Sectors and Blocks</title>
+<para>
+Mass storage devices operate on chunks of data, usually called
+sectors. The size of these device sectors varies, but is fixed for any
+one device. Hard disks and floppies usually use 512 bytes, while CDs
+use 2048 bytes.
+</para>
+<para>
+While today it is customary to number all sectors sequentially and let
+the drive's firmware figure out the rest, that wasn't always so. Hard
+disks (and floppies) are actually organized in three dimensions. They
+consist of one or more disks [...]
+</para>
+<para>
+File systems also operate on chunks at a time, but they don't need to
+be the same size as the device's sectors. The chunks used by the file
+system are usually called blocks, but cluster, allocation block, and
+allocation unit are also common.
+</para>
+</section>
+
+<!-- cylinders, heads, tracks -->
+
+<section>
+<title>Partitioning</title>
+<para>
+Hard disks are usually partitioned. That means they are divided into
+independent sections called partitions or slices. The operating
+system treats each partition as if it was a separate device. Thus
+partitions can be used for different purposes and can use different
+formats.
+</para>
+<para>
+Unfortunately, partitions don't come out of nowhere. Their locations
+must be recorded on the disk itself, usually in the first few
+sectors. Naturally, there are just as many such partitioning schemes
+as there are vendors. The data that records partitions is called the
+partition map, partition table, or disklabel.
+</para>
+<para>
+At least on the PC there is something of a standard partitioning
+scheme, originally defined by MS-DOS. Some PC Unix systems keep using
+their own scheme, but put it inside a PC-style partition, to allow
+other operating systems to co-exist on the disk.
+</para>
+<!-- TODO: something on RAID and logical volume managers -->
+</section>
+
+
+
+</chapter>
+
+
+
+<chapter>
+<title>Supported Formats</title>
+
+<para>
+This chapter lists the supported formats in some detail. Descriptions
+include background information, hints for interpreting the
+<application>disktype</application> output, and pointers to further
+information.
+</para>
+<para>
+Formats are grouped by platform or vendor for context.
+</para>
+
+
+
+<section>
+<title>Amiga</title>
+
+<para>
+The support for Amiga formats is mainly aimed at users of emulators.
+[.ADR disk image format: just a plain image of the disk, no special
+support necessary.]
+</para>
+<para>
+Broad information on Amiga file and disk formats can be found at
+<ulink url="http://perso.club-internet.fr/lclevy/amiga/formats.html"/>.
+</para>
+
+<section>
+<title>The Amiga File System</title>
+<para>
+The Amiga file system comes in several variants, but is used the same
+on floppies and on hard disk partitions. All variants store a boot
+block at the very beginning of the disk and a root block in the
+middle. Apparently the boot block does not contain any actual pointers
+to the root block, so its position must be determined (well, more like
+guessed) from disk parameters like block size, block count, and
+cylinder boundaries.
+</para>
+<para>
+<application>disktype</application> only uses the boot block to
+recognize the format. It contains a signature and a flags field that
+determine the file system variant. There's the original file system
+(reported as "Amiga OFS file system"), and the later "fast" file
+system (reported as "Amiga FFS file system"). The "fast" file system
+has variants for better dealing with international characters (well,
+European accented characters as in ISO Latin&nbsp;1, that is), and a
+variant using a "directory cache".
+</para>
+<para>
+As mentioned, <application>disktype</application> is unable to locate
+the root block right now, and thus can't print any more information
+like volume name or size. It does, however, check the size of the file
+against standard floppy sizes and reports matches.
+</para>
+</section>
+
+<section>
+<title>The Professional File System</title>
+<para>
+All that is known about the "Professional File System" is its
+signature in the boot block.
+<application>disktype</application> reports it if found.
+</para>
+</section>
+
+<section>
+<title>The Rigid Disk Partitioning Scheme</title>
+<para>
+The so-called "Rigid Disk" partitioning scheme is used on hard disks
+and sometimes(?) on removable media like Zip disks.
+[more]
+</para>
+</section>
+
+
+</section><!-- Amiga -->
+
+
+
+
+<section>
+<title>Apple Macintosh</title>
+
+<para>
+[to be written]
+</para>
+
+<section>
+<title>The Macintosh File System (MFS)</title>
+<para>
+This file system was used on the first Macs, using 400K floppies. It
+doesn't support folders (the Mac term for directories), just a set of
+files. The format was quickly replaced by the Hierarchical File
+System, which did support folders.
+</para>
+<para>
+<application>disktype</application> only recognizes the volume header
+signature of MFS.
+</para>
+</section>
+
+<section>
+<title>The Hierarchical File System (HFS)</title>
+<para>
+This file system was used on Macs for many years and for all media
+(floppies, hard disks, CD-ROMs). It has some special features, like
+the 4-character type and creator code remembered for every file, and
+dual-fork files, where the "data fork" stores application-specific
+data (like on other systems) and the "resource fork" stores additional
+information in a system-defined chunk format.
+</para>
+<para>
+HFS hit some limits with growing disk sizes (compare FAT16), and so
+the HFS+ format was designed as a replacement. HFS is still in
+widespread use, especially on interchange media, including disk images
+used for software distribution.
+</para>
+</section>
+
+<section>
+<title>The HFS Plus File System</title>
+<para>
+The HFS+ format was defined to improve shortcomings of HFS. It
+supports all the features of HFS, but also provides for POSIX file
+semantics and permissions. It is the primary file system for Mac
+OS&nbsp;X.  Classic Mac OS versions starting with 8.1 also support it.
+</para>
+<para>
+HFS+ volumes are often "wrapped" inside a dummy HFS volume. The dummy
+volume contains a ReadMe file, explaining the situation to the user of
+a pre-8.1 Mac OS release. It also contains a hidden System file,
+required for booting from a HFS+ volume on some machines. Special
+fields in the HFS volume header tell HFS+-aware systems where to find
+the actual volume.
+</para>
+<para>
+disktype recognizes both wrapped and non-wrapped HFS+ volumes. A
+wrapped volume will report accordingly.
+</para>
+<para>
+For some reason, the HFS+ volume header does not include the volume
+name. I assume that it is stored in the catalog (i.e. the volume's
+directory information B-tree), but have not been able to confirm or
+implement this. This issue is not covered in the otherwise excellent
+Apple TechNote covering the HFS+ format:
+<!--<ulink url=""/>-->
+</para>
+</section>
+
+<section>
+<title>The Apple Partitioning Scheme</title>
+<para>
+Apple's partitioning scheme is quite pleasant since it is exclusively
+based on logical sector numbers. (This may have to do with Apple's
+early adoption of SCSI.)
+</para>
+<para>
+The partition map is stored using one sector per partition, starting
+at sector 1. Sector 0 is used for driver information. The partition
+map also contains an entry for itself, and entries for any free space
+between or after partitions. According to the spec, every sector of
+the disk must be accounted for in the map.
+</para>
+<para>
+The type of the partition is stored as a clear text string, using such
+names as "Apple_HFS" or "Apple_Free" (for unused space). There is no
+distrinction betweeen HFS and HFS+ here; see the blurb about wrapped
+HFS+ volumes above.
+</para>
+</section>
+
+</section><!-- Apple Macintosh -->
+
+
+
+<section>
+<title>General PC Formats</title>
+
+<para>
+Although the PC-style partition tables were introduced by
+Microsoft(?), their universal adoption in the PC world would make it
+unfair to put them in the Microsoft section.
+</para>
+
+<section>
+<title>PC-style Partition Tables</title>
+<para>
+A PC-style partition table is stored in the very first sector of the
+disk, dubbed the Master Boot Record (MBR). It shares that sector with
+first-level boot code. As a result, the table only has four
+entries.
+</para>
+<para>
+The beginning and end of each partition are stored both in
+three-dimensional coordinates (cylinder-head-sector) and as a logical
+block number. The actual geometry of the drive (number of cylinders,
+heads, and sectors) is not stored in the MBR. The three-dimensional
+format has hit size limits several times now. For some years, hard
+disks have lied about their geometry and re-mapped that internally, so
+that the values would fit the fields in the partition table. Today,
+even that won't do. <application>disktype</application> ignores the
+geometric fields and uses just the logical sector numbers.
+</para>
+<para>
+Each partition also carries a one-byte type number. Out of habit they
+are written in hexadecimal without a special prefix. 83 actually means
+$83, or 131 in decimal. <application>disktype</application> also
+displays a name for each partition type, using the same table as Linux
+fdisk.
+</para>
+<para>
+For situations where more than four partitions are required, so-called
+"extended" partitions were created. One partition entry in the MBR is
+used to point to the extended partition, which contains a linked list
+of partition maps using the same layout as the one in the
+MBR. Partitions defined inside an extended partition are called
+"logical" partitions, while the ones defined in the MBR are called
+"primary". The actual differences are slight and mostly affect booting
+DOS-based operating systems.
+</para>
+<para>
+More information on PC-style partition tables can be found at
+<ulink url="http://www.win.tue.nl/~aeb/partitions/partition_tables-2.html" />.
+</para>
+</section>
+
+</section><!-- General PC Formats -->
+
+
+
+<section>
+<title>Linux File Systems</title>
+
+<para>
+[to be written]
+</para>
+
+<section>
+<title>ext2 and ext3</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>ReiserFS</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>Minix</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>romfs</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>cramfs</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>squashfs</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>Linux Swap</title>
+<para>
+[to be written]
+</para>
+</section>
+
+</section><!-- Linux File Systems -->
+
+
+
+<section>
+<title>Microsoft</title>
+
+<para>
+Microsoft's formats are quite a phenomenon. Despite obvious mis-design
+-- missing unique identification signatures and the need for excessive
+calculations, for example -- the FAT formats have established
+themselves as standards for cross-system interchange.
+</para>
+
+<section>
+<title>FAT12, FAT16, and FAT32</title>
+<para>
+This family of formats has a long history. They were introduced by
+MS-DOS and are still supported and used today in all versions of MS
+Windows. FAT stands for File Allocation Table, a central structure in
+the file system. It acts as an allocation bitmap, but also stores
+which clusters belong to a certain file using linked lists. As the
+names indicate, there are variants with entry sizes of 12, 16 and 32
+bits.
+</para>
+<para>
+One unique feature of the FAT file systems is that they are hard to
+identify. The first sector is called the "boot sector". It contains
+some parameters at the beginning; the rest of the sector is used for
+boot code. Identification is only possible through consistency checks
+of these parameters. Since the format is quite flexible,
+<application>disktype</application> only uses some of these as "hard"
+tests, and uses the rest to calculate a "hints score". For example,
+there is a two-byte signature at the end of the boot sector that is
+used by PC BIOSes to check for a bootable disk. It is entirely
+possible to encounter an otherwise valid FAT file system in the wild
+that lacks this signature, though.
+</para>
+<para>
+To make the situation even worse, some other PC formats, including
+Microsoft's own NTFS, seem to use the same parameter block in the boot
+sector, for compatibility with PC
+BIOSes. <application>disktype</application> tries to avoid it, but it
+may still misidentify one of these as a FAT file system. Hopefully the
+"hints score" will help you identify such situations.
+</para>
+</section>
+
+<section>
+<title>NTFS</title>
+<para>
+NTFS is the file system used by Microsoft in the Windows NT range of
+operating systems. It is much better designed than FAT was, and
+supports features like extended attributes and n-fork
+files.
+</para>
+<para>
+<application>disktype</application> uses a signature in the "system
+identifier" field of the boot sector to identify NTFS. I can only hope
+this really is a signature and not just a coincidence that no one
+cared to change over the years. <application>disktype</application>
+also checks some other paramaters in the boot sector, but those are
+shared with the FAT file system family...
+</para>
+<!-- link to Linux NTFS docs -->
+</section>
+
+</section><!-- Microsoft -->
+
+
+
+<section>
+<title>IBM</title>
+
+<para>
+[to be written]
+</para>
+
+<section>
+<title>HPFS</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>JFS</title>
+<para>
+[to be written]
+</para>
+</section>
+
+</section><!-- IBM -->
+
+
+
+<section>
+<title>Commercial Unix Flavors</title>
+
+<para>
+[to be written]
+</para>
+
+<section>
+<title>UFS</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>System V FS</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>XFS</title>
+<para>
+[to be written]
+</para>
+</section>
+
+</section><!-- Commercial Unix -->
+
+
+
+<section>
+<title>CD File Systems</title>
+
+<para>
+[to be written]
+</para>
+
+<section>
+<title>ISO9660</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>The Joliet Extension</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>The RockRidge Extension</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>Hybrid PC/Macintosh CDs</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>The El Torito Boot Specification</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>UDF</title>
+<para>
+[to be written]
+</para>
+</section>
+
+</section><!-- CD File Systems -->
+
+
+
+<section>
+<title>Boot Codes</title>
+
+<para>
+[to be written]
+</para>
+
+</section><!-- Boot Codes -->
+
+
+
+<section>
+<title>Archive Formats</title>
+
+<para>
+[to be written]
+</para>
+
+<section>
+<title>tar</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>cpio</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>dump/restore</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>bar</title>
+<para>
+[to be written]
+</para>
+</section>
+
+</section><!-- Archive Formats -->
+
+
+
+<section>
+<title>Compression Formats</title>
+
+<section>
+<title>compress</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>gzip</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<section>
+<title>bzip2</title>
+<para>
+[to be written]
+</para>
+</section>
+
+</section><!-- Archive Formats -->
+
+
+
+</chapter>
+</book>
