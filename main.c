@@ -36,6 +36,7 @@
  */
 
 static void analyze_file(const char *filename);
+static void print_kind(int filekind, u8 filesize);
 
 #ifdef USE_MACOS_TYPE
 static void show_macos_type(const char *filename);
@@ -71,10 +72,10 @@ int main(int argc, char *argv[])
 
 static void analyze_file(const char *filename)
 {
-  int fd, is_device;
+  int fd, filekind;
   u8 filesize;
   struct stat sb;
-  char *reason, buf[256];
+  char *reason;
   SOURCE *s;
   SECTION section;
 
@@ -82,23 +83,22 @@ static void analyze_file(const char *filename)
 
   /* stat check */
   if (stat(filename, &sb) < 0) {
-    errore("%.300s", filename);
+    errore("Can't stat %.300s", filename);
     return;
   }
 
-  is_device = 0;
+  filekind = 0;
   filesize = 0;
   reason = NULL;
   if (S_ISREG(sb.st_mode)) {
     filesize = sb.st_size;
-    format_size(buf, filesize, 1);
-    print_line(0, "Regular file, size %llu bytes (%s)", filesize, buf);
-  } else if (S_ISBLK(sb.st_mode)) {
-    is_device = 1;
-  } else if (S_ISDIR(sb.st_mode))
-    reason = "Is a directory";
+    print_kind(filekind, filesize);
+  } else if (S_ISBLK(sb.st_mode))
+    filekind = 1;
   else if (S_ISCHR(sb.st_mode))
-    reason = "Is a character device";
+    filekind = 2;
+  else if (S_ISDIR(sb.st_mode))
+    reason = "Is a directory";
   else if (S_ISFIFO(sb.st_mode))
     reason = "Is a FIFO";
   else if (S_ISSOCK(sb.st_mode))
@@ -113,18 +113,18 @@ static void analyze_file(const char *filename)
 
   /* Mac OS type & creator code (if running on Mac OS X) */
 #ifdef USE_MACOS_TYPE
-  if (!is_device)
+  if (filekind == 0)
     show_macos_type(filename);
 #endif
 
-  /* empty files need no further analysis */
-  if (!is_device && filesize == 0)
+  /* empty regular files need no further analysis */
+  if (filekind == 0 && filesize == 0)
     return;
 
   /* open for reading */
   fd = open(filename, O_RDONLY);
   if (fd < 0) {
-    errore("%.300s", filename);
+    errore("Can't open %.300s", filename);
     return;
   }
 
@@ -132,14 +132,8 @@ static void analyze_file(const char *filename)
   s = init_file_source(fd);
 
   /* tell the user what it is */
-  if (is_device) {
-    if (s->size) {
-      format_size(buf, s->size, 1);
-      print_line(0, "Block device, size %llu bytes (%s)", s->size, buf);
-    } else {
-      print_line(0, "Block device, unknown size");
-    }
-  }
+  if (filekind != 0)
+    print_kind(filekind, s->size);
 
   /* now analyze it */
   section.source = s;
@@ -149,6 +143,27 @@ static void analyze_file(const char *filename)
 
   /* finish it up */
   close_source(s);
+}
+
+static void print_kind(int filekind, u8 filesize)
+{
+  char buf[256], *kindname;
+
+  if (filekind == 0)
+    kindname = "Regular file";
+  else if (filekind == 1)
+    kindname = "Block device";
+  else if (filekind == 2)
+    kindname = "Character device";
+  else
+    kindname = "Unknown kind";
+
+  if (filesize > 0 || filekind == 0) {
+    format_size(buf, filesize, 1);
+    print_line(0, "%s, size %llu bytes (%s)", kindname, filesize, buf);
+  } else {
+    print_line(0, "%s, unknown size", kindname);
+  }
 }
 
 /*
