@@ -156,9 +156,33 @@ void analyze_source(SOURCE *s, int level)
 {
   SECTION section;
 
+  /* Allow custom analyzing using special info available to the
+     data source implementation. The analyze() function must either
+     call through to analyze_source_special() or return zero. */
+  if (s->analyze != NULL) {
+    if ((*s->analyze)(s, level))
+      return;
+  }
+
   section.source = s;
   section.pos = 0;
   section.size = s->size_known ? s->size : 0;
+  section.flags = 0;
+
+  detect(&section, level);
+}
+
+/*
+ * analyze part of a given source
+ */
+
+void analyze_source_special(SOURCE *s, int level, u8 pos, u8 size)
+{
+  SECTION section;
+
+  section.source = s;
+  section.pos = pos;
+  section.size = size;
   section.flags = 0;
 
   detect(&section, level);

@@ -57,6 +57,7 @@ typedef struct file_source {
  * helper functions
  */
 
+static int analyze_file(SOURCE *s, int level);
 static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf);
 static void close_file(SOURCE *s);
 
@@ -78,6 +79,8 @@ SOURCE *init_file_source(int fd, int filekind)
     bailout("Out of memory");
   memset(fs, 0, sizeof(FILE_SOURCE));
 
+  if (filekind != 0)  /* special treatment hook for devices */
+    fs->c.analyze = analyze_file;
   fs->c.read_bytes = read_file;
   fs->c.close = close_file;
   fs->fd = fd;
@@ -214,6 +217,18 @@ SOURCE *init_file_source(int fd, int filekind)
 #endif
 
   return (SOURCE *)fs;
+}
+
+/*
+ * special handling hook: devices may have out-of-band structure
+ */
+
+static int analyze_file(SOURCE *s, int level)
+{
+  if (analyze_cdaccess(((FILE_SOURCE *)s)->fd, s, level))
+    return 1;
+
+  return 0;
 }
 
 /*
