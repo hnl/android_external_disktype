@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.7 2003/03/23 13:21:07 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.8 2003/03/23 14:14:18 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -44,7 +44,7 @@ it in disktype so that the code would not be lost.
 Version 4 is still under development. It features the following
 improvements:
 
-Added file systems: Linux squashfs.
+Added file systems: Linux squashfs, XFS.
 Added other structures: -
 Improved file systems: -
 Improved other structures: -

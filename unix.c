@@ -167,6 +167,41 @@ void detect_jfs(SECTION *section, int level)
 }
 
 /*
+ * XFS for Linux
+ */
+
+void detect_xfs(SECTION *section, int level)
+{
+  unsigned char *buf;
+  u4 raw_version, blocksize;
+  u8 blockcount;
+  int version;
+  char s[256];
+
+  if (get_buffer(section, 0, 512, (void **)&buf) < 512)
+    return;
+
+  /* check signature */
+  if (get_be_long(buf) != 0x58465342)
+    return;
+
+  /* tell the user */
+  raw_version = get_be_short(buf + 0x64);
+  version = raw_version & 0x000f;
+  print_line(level, "XFS file system, version %d", version);
+
+  memcpy(s, buf + 0x6c, 12);
+  s[12] = 0;
+  print_line(level + 1, "Volume name \"%s\"", s);
+
+  blocksize = get_be_long(buf + 4);
+  blockcount = get_be_quad(buf + 8);
+  format_size(s, blockcount, blocksize);
+  print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
+	     s, blockcount, blocksize);
+}
+
+/*
  * Linux RAID persistent superblock
  */
 
