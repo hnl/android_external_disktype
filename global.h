@@ -107,7 +107,11 @@ void finish_line(int level);
 
 /* formatting functions */
 
-void format_size(char *buf, u8 size, u4 mult);
+void format_blocky_size(char *buf, u8 count, u4 blocksize,
+                        const char *blockname, const char *append);
+void format_size(char *buf, u8 size);
+void format_size_verbose(char *buf, u8 size);
+/* OLD: void format_size(char *buf, u8 size, u4 mult); */
 
 void format_ascii(void *from, char *to);
 void format_unicode(void *from, char *to);

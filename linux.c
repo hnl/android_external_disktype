@@ -62,9 +62,8 @@ void detect_ext23(SECTION *section, int level)
 
     blocksize = 1024 << get_le_long(buf + 24);
     blockcount = get_le_long(buf + 4);
-    format_size(s, blockcount, blocksize);
-    print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
-	       s, blockcount, blocksize);
+    format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+    print_line(level + 1, "Volume size %s", s);
 
     /* 76 4 s_rev_level */
     /* 62 2 s_minor_rev_level */
@@ -93,20 +92,20 @@ void detect_reiser(SECTION *section, int level)
 
     /* check signature */
     if (memcmp(buf + 52, "ReIsErFs", 8) == 0) {
-      print_line(level, "ReiserFS file system (old 3.5 format, standard journal, starts at %dK)", at);
+      print_line(level, "ReiserFS file system (old 3.5 format, standard journal, starts at %d KiB)", at);
       newformat = 0;
     } else if (memcmp(buf + 52, "ReIsEr2Fs", 9) == 0) {
-      print_line(level, "ReiserFS file system (new 3.6 format, standard journal, starts at %dK)", at);
+      print_line(level, "ReiserFS file system (new 3.6 format, standard journal, starts at %d KiB)", at);
       newformat = 1;
     } else if (memcmp(buf + 52, "ReIsEr3Fs", 9) == 0) {
       newformat = get_le_short(buf + 72);
       if (newformat == 0) {
-	print_line(level, "ReiserFS file system (old 3.5 format, non-standard journal, starts at %dK)", at);
+	print_line(level, "ReiserFS file system (old 3.5 format, non-standard journal, starts at %d KiB)", at);
       } else if (newformat == 2) {
-	print_line(level, "ReiserFS file system (new 3.6 format, non-standard journal, starts at %dK)", at);
+	print_line(level, "ReiserFS file system (new 3.6 format, non-standard journal, starts at %d KiB)", at);
 	newformat = 1;
       } else {
-	print_line(level, "ReiserFS file system (v3 magic, but unknown version %d, starts at %dK)", newformat, at);
+	print_line(level, "ReiserFS file system (v3 magic, but unknown version %d, starts at %d KiB)", newformat, at);
 	continue;
       }
     } else
@@ -128,9 +127,8 @@ void detect_reiser(SECTION *section, int level)
     print_line(level + 1, "UUID %s", s);
 
     /* print size */
-    format_size(s, blockcount, blocksize);
-    print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
-	       s, blockcount, blocksize);
+    format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+    print_line(level + 1, "Volume size %s", s);
 
     /* TODO: print hash code */
   }
@@ -210,7 +208,7 @@ void detect_linux_raid(SECTION *section, int level)
 void detect_linux_lvm(SECTION *section, int level)
 {
   unsigned char *buf;
-  char s[256], t[256];
+  char s[256];
   u8 pe_size, pe_count, pe_start;
 
   if (get_buffer(section, 0, 1024, (void **)&buf) < 1024)
@@ -237,10 +235,8 @@ void detect_linux_lvm(SECTION *section, int level)
   /* volume size */
   pe_size = get_le_long(buf + 452);
   pe_count = get_le_long(buf + 456);
-  format_size(s, pe_size * pe_count, 512);
-  format_size(t, pe_size, 512);
-  print_line(level + 1, "Useable size %s (%llu PEs of %s)",
-	     s, pe_count, t);
+  format_blocky_size(s, pe_count, pe_size * 512, "PEs", NULL);
+  print_line(level + 1, "Useable size %s", s);
 
   /* first PE starts after the declared length of the PE tables */
   pe_start = get_le_long(buf + 36) + get_le_long(buf + 40);
@@ -272,7 +268,7 @@ void detect_linux_swap(SECTION *section, int level)
       break;  /* assumes page sizes increase through the loop */
 
     if (memcmp((char *)buf + 512 - 10, "SWAP-SPACE", 10) == 0) {
-      print_line(level, "Linux swap, version 1, %dK pages",
+      print_line(level, "Linux swap, version 1, %d KiB pages",
 		 pagesize >> 10);
     }
     if (memcmp((char *)buf + 512 - 10, "SWAPSPACE2", 10) == 0) {
@@ -285,16 +281,15 @@ void detect_linux_swap(SECTION *section, int level)
 	  break;
       }
       if (en < 2) {
-	print_line(level, "Linux swap, version 2, subversion %d, %dK pages, %s",
+	print_line(level, "Linux swap, version 2, subversion %d, %d KiB pages, %s",
 		   (int)version, pagesize >> 10, get_ve_name(en));
 	if (version == 1) {
 	  pages = get_ve_long(en, buf + 4) - 1;
-	  format_size(s, pages, pagesize);
-	  print_line(level + 1, "Swap size %s (%lu pages)",
-		     s, pages);
+	  format_blocky_size(s, pages, pagesize, "pages", NULL);
+	  print_line(level + 1, "Swap size %s", s);
 	}
       } else {
-	print_line(level, "Linux swap, version 2, illegal subversion, %dK pages",
+	print_line(level, "Linux swap, version 2, illegal subversion, %d KiB pages",
 		   pagesize >> 10);
       }
     }
@@ -342,9 +337,8 @@ void detect_linux_misc(SECTION *section, int level)
 	blocks = get_le_long(buf + 1024 + 20);
       blocks = (blocks - get_le_short(buf + 1024 + 8))
 	<< get_le_short(buf + 1024 + 10);
-      format_size(s, blocks, 1024);
-      print_line(level + 1, "Volume size %s (%llu blocks of 1K)",
-		 s, blocks);
+      format_blocky_size(s, blocks, 1024, "blocks", NULL);
+      print_line(level + 1, "Volume size %s", s);
     }
   }
 
@@ -353,8 +347,8 @@ void detect_linux_misc(SECTION *section, int level)
     size = get_be_long(buf + 8);
     print_line(level, "Linux romfs");
     print_line(level+1, "Volume name \"%.300s\"", (char *)(buf + 16));
-    format_size(s, size, 1);
-    print_line(level+1, "Volume size %s (%llu bytes)", s, size);
+    format_size_verbose(s, size);
+    print_line(level+1, "Volume size %s", s);
   }
 
   /* Linux cramfs */
@@ -371,12 +365,10 @@ void detect_linux_misc(SECTION *section, int level)
 
 	size = get_ve_long(en, buf + off + 4);
 	blocks = get_ve_long(en, buf + off + 40);
-	format_size(s, size, 1);
-	print_line(level + 1, "Compressed size %s (%llu bytes)",
-		   s, size);
-	format_size(s, blocks, 4096);
-	print_line(level + 1, "Data size %s (%llu blocks of -assumed- 4K)",
-		   s, blocks);
+	format_size_verbose(s, size);
+	print_line(level + 1, "Compressed size %s", s);
+	format_blocky_size(s, blocks, 4096, "blocks", " -assumed-");
+	print_line(level + 1, "Data size %s", s);
       }
     }
   }
@@ -394,10 +386,9 @@ void detect_linux_misc(SECTION *section, int level)
       size = get_ve_long(en, buf + 8);
       blocksize = get_ve_short(en, buf + 32);
 
-      format_size(s, size, 1);
-      print_line(level + 1, "Compressed size %s (%llu bytes)",
-		 s, size);
-      format_size(s, blocksize, 1);
+      format_size_verbose(s, size);
+      print_line(level + 1, "Compressed size %s", s);
+      format_size(s, blocksize);
       print_line(level + 1, "Block size %s", s);
     }
   }

@@ -68,9 +68,8 @@ void detect_bfs(SECTION *section, int level)
 	     blocksize == 1 << get_ve_long(en, buf + 44)
 	*/
 
-	format_size(s, blockcount, blocksize);
-	print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
-		   s, blockcount, blocksize);
+	format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+	print_line(level + 1, "Volume size %s", s);
 
 	return;
       }

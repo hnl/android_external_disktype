@@ -55,9 +55,8 @@ void detect_jfs(SECTION *section, int level)
 
   blocksize = get_le_long(buf + 24);
   blockcount = get_le_quad(buf + 8);
-  format_size(s, blockcount, blocksize);
-  print_line(level + 1, "Volume size %s (%llu h/w blocks of %lu bytes)",
-	     s, blockcount, blocksize);
+  format_blocky_size(s, blockcount, blocksize, "h/w blocks", NULL);
+  print_line(level + 1, "Volume size %s", s);
 }
 
 /*
@@ -92,9 +91,8 @@ void detect_xfs(SECTION *section, int level)
 
   blocksize = get_be_long(buf + 4);
   blockcount = get_be_quad(buf + 8);
-  format_size(s, blockcount, blocksize);
-  print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
-	     s, blockcount, blocksize);
+  format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+  print_line(level + 1, "Volume size %s", s);
 }
 
 /*
@@ -122,19 +120,19 @@ void detect_ufs(SECTION *section, int level)
       magic = get_ve_long(en, buf + 1372);
 
       if (magic == 0x00011954) {
-	print_line(level, "UFS file system, %dK offset, %s",
+	print_line(level, "UFS file system, %d KiB offset, %s",
 		   at, get_ve_name(en));
       } else if (magic == 0x00095014) {
-	print_line(level, "UFS file system, %dK offset, long file names, %s",
+	print_line(level, "UFS file system, %d KiB offset, long file names, %s",
 		   at, get_ve_name(en));
       } else if (magic == 0x00195612) {
-	print_line(level, "UFS file system, %dK offset, fs_featurebits, %s",
+	print_line(level, "UFS file system, %d KiB offset, fs_featurebits, %s",
 		   at, get_ve_name(en));
       } else if (magic == 0x05231994) {
-	print_line(level, "UFS file system, %dK offset, fs_featurebits, >4GB support, %s",
+	print_line(level, "UFS file system, %d KiB offset, fs_featurebits, >4GB support, %s",
 		   at, get_ve_name(en));
       } else if (magic == 0x19540119) {
-	print_line(level, "UFS2 file system, %dK offset, %s",
+	print_line(level, "UFS2 file system, %d KiB offset, %s",
 		   at, get_ve_name(en));
       } else
 	continue;
@@ -188,9 +186,9 @@ void detect_sysv(SECTION *section, int level)
 	if (blocksize_code == 1)
 	  strcpy(s, "512 byte blocks");
 	else if (blocksize_code == 2)
-	  strcpy(s, "1K blocks");
+	  strcpy(s, "1 KiB blocks");
 	else if (blocksize_code == 3)
-	  strcpy(s, "2K blocks");
+	  strcpy(s, "2 KiB blocks");
 	else
 	  snprintf(s, 255, "unknown block size code %d", (int)blocksize_code);
 
@@ -205,7 +203,7 @@ void detect_sysv(SECTION *section, int level)
 	if (blocksize_code == 1)
 	  strcpy(s, "512 byte blocks");
 	else if (blocksize_code == 2)
-	  strcpy(s, "1K blocks");
+	  strcpy(s, "1 KiB blocks");
 	else
 	  snprintf(s, 255, "unknown block size code %d", (int)blocksize_code);
 
@@ -227,8 +225,8 @@ static char * type_names[] = {
   "Sixth Edition",
   "Seventh Edition",
   "System V",
-  "V7 with 1K blocks",
-  "Eighth Edition, 4K blocks",
+  "V7 with 1 KiB blocks",
+  "Eighth Edition, 4 KiB blocks",
   "4.2BSD fast file system",
   "ext2 or MS-DOS",
   "4.4BSD log-structured file system",
@@ -251,11 +249,11 @@ static char * get_name_for_type(int type)
 void detect_bsd_disklabel(SECTION *section, int level)
 {
   unsigned char *buf;
-  int i, off, partcount, types[22], min_offset_valid, did_recurse;
-  u4 starts[22], sizes[22];
+  int i, off, partcount, types[16], min_offset_valid, did_recurse;
+  u4 starts[16], sizes[16];
   u4 sectsize, nsectors, ntracks, ncylinders, secpercyl, secperunit;
   u8 offset, min_offset, base_offset;
-  char s[256], pn;
+  char s[256], append[64], pn;
 
   if (section->flags & FLAG_IN_DISKLABEL)
     return;
@@ -329,9 +327,10 @@ void detect_bsd_disklabel(SECTION *section, int level)
     if (types[i] == 0 && i != 2)
       continue;
 
-    format_size(s, sizes[i], 512);
-    print_line(level, "Partition %c: %s (%lu sectors starting at %lu)",
-	       pn, s, sizes[i], starts[i]);
+    sprintf(append, " starting at %lu", starts[i]);
+    format_blocky_size(s, sizes[i], 512, "sectors", append);
+    print_line(level, "Partition %c: %s",
+	       pn, s);
 
     print_line(level + 1, "Type %d (%s)",
 	       types[i], get_name_for_type(types[i]));
@@ -403,7 +402,7 @@ void detect_solaris_vtoc(SECTION *section, int level)
   u4 starts[16], sizes[16];
   u4 version;
   u8 offset;
-  char s[256];
+  char s[256], append[64];
 
   if (section->flags & FLAG_IN_DISKLABEL)
     return;
@@ -449,9 +448,10 @@ void detect_solaris_vtoc(SECTION *section, int level)
     if (sizes[i] == 0)
       continue;
 
-    format_size(s, sizes[i], 512);
-    print_line(level, "Partition %d: %s (%lu sectors starting at %lu)",
-	       i, s, sizes[i], starts[i]);
+    sprintf(append, " starting at %lu", starts[i]);
+    format_blocky_size(s, sizes[i], 512, "sectors", append);
+    print_line(level, "Partition %d: %s",
+	       i, s);
 
     print_line(level + 1, "Type %d",
 	       types[i]);

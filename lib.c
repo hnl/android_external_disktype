@@ -89,53 +89,124 @@ void finish_line(int level)
  * formatting functions
  */
 
-void format_size(char *buf, u8 size, u4 mult)
+/* TODO: make all of this safe from buffer overruns... */
+
+/*
+ * format_raw_size() does the actual unit-suffix formatting.
+ *
+ * Returns an indicator for the format used:
+ *  0 - rounded to some unit
+ *  1 - whole multiple of some unit (return code limited to KiB)
+ *  2 - plain bytes
+ */
+
+static int format_raw_size(char *buf, u8 size)
 {
-  int card;
+  int unit_index, dd;
+  u8 unit_size, card;
+  const char *unit_names[] =
+    { "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", NULL };
+  const int dd_mult[4] = { 1, 10, 100, 1000 };
 
-  size *= mult;
+  /* just a few bytes */
+  if (size < 1024) {
+    sprintf(buf, "%llu bytes", size);
+    return 2;
+  }
 
-  if (size < 1000) {
-    card = (int)size;
-    sprintf(buf, "%dB", card);
-  } else if (size < (1000<<10) && (size & 0x3ff) == 0) {
-    /* whole kilobytes look funny else... */
-    card = (int)(size >> 10);
-    sprintf(buf, "%dK", card);
-  } else if (size < (10<<10)) {
-    card = (int)((size * 100 + 512) / 1024);
-    sprintf(buf, "%d.%02dK", card / 100, card % 100);
-  } else if (size < (100<<10)) {
-    card = (int)((size * 10 + 512) / 1024);
-    sprintf(buf, "%d.%01dK", card / 10, card % 10);
-  } else if (size < (1000<<10)) {
-    card = (int)((size + 512) / 1024);
-    sprintf(buf, "%dK", card);
-  } else {
-    size >>= 10;
-    if (size < (10<<10)) {
-      card = (int)((size * 100 + 512) / 1024);
-      sprintf(buf, "%d.%02dM", card / 100, card % 100);
-    } else if (size < (100<<10)) {
-      card = (int)((size * 10 + 512) / 1024);
-      sprintf(buf, "%d.%01dM", card / 10, card % 10);
-    } else if (size < (1000<<10)) {
-      card = (int)((size + 512) / 1024);
-      sprintf(buf, "%dM", card);
-    } else {
-      size >>= 10;
-      if (size < (10<<10)) {
-	card = (int)((size * 100 + 512) / 1024);
-	sprintf(buf, "%d.%02dG", card / 100, card % 100);
-      } else if (size < (100<<10)) {
-	card = (int)((size * 10 + 512) / 1024);
-	sprintf(buf, "%d.%01dG", card / 10, card % 10);
-      } else {
-	card = (int)((size + 512) / 1024);
-	sprintf(buf, "%dG", card);
-      }
+  /* find a suitable unit */
+  for (unit_index = 0, unit_size = 1024;
+       unit_names[unit_index] != NULL;
+       unit_index++, unit_size <<= 10) {
+
+    /* size is at least one of the next unit -> use that */
+    if (size >= 1024 * unit_size)
+      continue;
+
+    /* check integral multiples */
+    if ((size % unit_size) == 0) {
+      card = size / unit_size;
+      sprintf(buf, "%d %s",
+	      (int)card,
+	      unit_names[unit_index]);
+      return unit_index ? 0 : 1;
+    }
+
+    /* find suitable number of decimal digits */
+    for (dd = 3; dd >= 1; dd--) {
+      card = (size * dd_mult[dd] + (unit_size >> 1)) / unit_size;
+      if (card >= 10000)
+	continue;  /* more than four significant digits */
+
+      sprintf(buf, "%d.%0*d %s",
+	          (int)(card / dd_mult[dd]),
+	      dd, (int)(card % dd_mult[dd]),
+	      unit_names[unit_index]);
+      return 0;
     }
   }
+
+  /* fallback (something wrong with the numbers?) */
+  strcpy(buf, "off the scale");
+  return 0;
+}
+
+void format_blocky_size(char *buf, u8 count, u4 blocksize,
+			const char *blockname, const char *append)
+{
+  int used;
+  u8 total_size;
+  char *p;
+  char blocksizebuf[32];
+
+  total_size = count * blocksize;
+  used = format_raw_size(buf, total_size);
+  p = strchr(buf, 0);
+
+  *p++ = ' ';
+  *p++ = '(';
+
+  if (used != 2) {
+    sprintf(p, "%llu bytes, ", total_size);
+    p = strchr(buf, 0);
+  }
+
+  if (blocksize < 64*1024 && (blocksize % 1024) != 0)
+    sprintf(blocksizebuf, "%lu bytes", blocksize);
+  else
+    format_raw_size(blocksizebuf, blocksize);
+  sprintf(p, "%llu %s of %s", count, blockname, blocksizebuf);
+  p = strchr(buf, 0);
+
+  if (append != NULL) {
+    strcpy(p, append);
+    p = strchr(buf, 0);
+  }
+
+  *p++ = ')';
+  *p++ = 0;
+}
+
+void format_size(char *buf, u8 size)
+{
+  int used;
+
+  used = format_raw_size(buf, size);
+  if (used > 0)
+    return;
+
+  sprintf(strchr(buf, 0), " (%llu bytes)", size);
+}
+
+void format_size_verbose(char *buf, u8 size)
+{
+  int used;
+
+  used = format_raw_size(buf, size);
+  if (used == 2)
+    return;
+
+  sprintf(strchr(buf, 0), " (%llu bytes)", size);
 }
 
 void format_ascii(void *from, char *to)

@@ -51,7 +51,7 @@ void detect_atari_partmap(SECTION *section, int level)
   u4 start, size, starts[4], sizes[4];
   char types[4][4], *type;
   u2 atari_csum;
-  char s[256];
+  char s[256], append[64];
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -90,10 +90,12 @@ void detect_atari_partmap(SECTION *section, int level)
     if ((flag & 1) == 0)
       continue;
 
-    format_size(s, size, 512);
-    print_line(level, "Partition %d: %s (%lu sectors starting at %lu%s)",
-	       i+1, s, size, start,
-	       (flag & 0x80) ? ", bootable" : "");
+    sprintf(append, " starting at %lu", start);
+    if (flag & 0x80)
+      strcat(append, ", bootable");
+    format_blocky_size(s, size, 512, "sectors", append);
+    print_line(level, "Partition %d: %s",
+	       i+1, s);
 
     print_line(level + 1, "Type \"%s\" (%s)", type,
 	       get_name_for_type(type));
@@ -117,7 +119,7 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
   int i, off, flags[4];
   u4 start, size, starts[4], sizes[4];
   char types[4][4], *type;
-  char s[256];
+  char s[256], append[64];
 
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
     /* read sector from linked list */
@@ -149,9 +151,10 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
       } else {
 	/* real partition */
 
-	format_size(s, size, 512);
-	print_line(level, "Partition %d: %s (%lu sectors starting at %lu)",
-		   extpartnum, s, size, start);
+	sprintf(append, " starting at %lu", start);
+	format_blocky_size(s, size, 512, "sectors", append);
+	print_line(level, "Partition %d: %s",
+		   extpartnum, s);
 	extpartnum++;
 
 	print_line(level + 1, "Type \"%s\" (%s)", type,

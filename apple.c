@@ -34,7 +34,7 @@
 void detect_apple_partmap(SECTION *section, int level)
 {
   int i, magic, count;
-  char s[256];
+  char s[256], append[64];
   unsigned char *buf;
   u8 start, size;
 
@@ -79,9 +79,10 @@ void detect_apple_partmap(SECTION *section, int level)
     /* get position and size */
     start = get_be_long(buf + 8);
     size = get_be_long(buf + 12);
-    format_size(s, size, 512);
-    print_line(level, "Partition %d: %s (%llu sectors starting at %llu)",
-	       i, s, size, start);
+    sprintf(append, " starting at %llu", start);
+    format_blocky_size(s, size, 512, "sectors", append);
+    print_line(level, "Partition %d: %s",
+	       i, s);
 
     /* get type */
     get_string(buf + 48, 32, s);
@@ -126,9 +127,8 @@ void detect_apple_volume(SECTION *section, int level)
     format_ascii(s, t);
     print_line(level + 1, "Volume name \"%s\"", t);
 
-    format_size(s, blockcount, blocksize);
-    print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
-	       s, blockcount, blocksize);
+    format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+    print_line(level + 1, "Volume size %s", s);
 
     if (get_be_short(buf + 0x7c) == 0x482B) {
       print_line(level, "HFS wrapper for HFS Plus");
@@ -147,9 +147,8 @@ void detect_apple_volume(SECTION *section, int level)
     blocksize = get_be_long(buf + 40);
     blockcount = get_be_long(buf + 44);
 
-    format_size(s, blockcount, blocksize);
-    print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
-	       s, blockcount, blocksize);
+    format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+    print_line(level + 1, "Volume size %s", s);
 
     /* TODO: is there a volume name somewhere? */
   }

@@ -156,7 +156,7 @@ void detect_dos_partmap(SECTION *section, int level)
   int i, off, used, type, types[4], bootflags[4];
   u4 start, size, starts[4], sizes[4];
   int extpartnum = 5;
-  char s[256];
+  char s[256], append[64];
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -197,10 +197,12 @@ void detect_dos_partmap(SECTION *section, int level)
     if (start == 0 || size == 0)
       continue;
 
-    format_size(s, size, 512);
-    print_line(level, "Partition %d: %s (%lu sectors starting at %lu%s)",
-	       i+1, s, size, start,
-	       (bootflags[i] == 0x80) ? ", bootable" : "");
+    sprintf(append, " starting at %lu", start);
+    if (bootflags[i] == 0x80)
+      strcat(append, ", bootable");
+    format_blocky_size(s, size, 512, "sectors", append);
+    print_line(level, "Partition %d: %s",
+	       i+1, s);
 
     print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
 
@@ -222,7 +224,7 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
   u8 tablebase, nexttablebase;
   int i, off, type, types[4];
   u4 start, size, starts[4], sizes[4];
-  char s[256];
+  char s[256], append[64];
 
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
     /* read sector from linked list */
@@ -264,9 +266,10 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
       } else {
 	/* logical partition */
 
-	format_size(s, size, 512);
-	print_line(level, "Partition %d: %s (%lu sectors starting at %llu+%lu)",
-		   *extpartnum, s, size, tablebase, start);
+	sprintf(append, " starting at %llu+%lu", tablebase, start);
+	format_blocky_size(s, size, 512, "sectors", append);
+	print_line(level, "Partition %d: %s",
+		   *extpartnum, s);
 	(*extpartnum)++;
 	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
 
@@ -369,9 +372,9 @@ void detect_fat(SECTION *section, int level)
   if (sectsize > 512)
     print_line(level + 1, "Unusual sector size %lu bytes", sectsize);
 
-  format_size(s, clustercount, clustersize * sectsize);
-  print_line(level + 1, "Volume size %s (%llu clusters of %lu bytes)",
-	     s, clustercount, clustersize * sectsize);
+  format_blocky_size(s, clustercount, clustersize * sectsize,
+		     "clusters", NULL);
+  print_line(level + 1, "Volume size %s", s);
 
   /* get the cached volume name if present */
   if (fattype < 2) {
@@ -432,9 +435,8 @@ void detect_ntfs(SECTION *section, int level)
   /* tell the user */
   print_line(level, "NTFS file system");
 
-  format_size(s, sectcount, sectsize);
-  print_line(level + 1, "Volume size %s (%llu sectors of %lu bytes)",
-	     s, sectcount, sectsize);
+  format_blocky_size(s, sectcount, sectsize, "sectors", NULL);
+  print_line(level + 1, "Volume size %s", s);
 }
 
 /*
@@ -457,9 +459,8 @@ void detect_hpfs(SECTION *section, int level)
 	     (int)buf[8], (int)buf[9]);
 
   sectcount = get_le_long(buf + 16);
-  format_size(s, sectcount, 512);
-  print_line(level + 1, "Volume size %s (%llu sectors of 512 bytes)",
-	     s, sectcount);
+  format_blocky_size(s, sectcount, 512, "sectors", NULL);
+  print_line(level + 1, "Volume size %s", s);
 
   /* TODO: BPB in boot sector, volume label -- information? */
 }

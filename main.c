@@ -165,8 +165,8 @@ static void print_kind(int filekind, u8 size, int size_known)
     kindname = "Unknown kind";
 
   if (size_known) {
-    format_size(buf, size, 1);
-    print_line(0, "%s, size %llu bytes (%s)", kindname, size, buf);
+    format_size_verbose(buf, size);
+    print_line(0, "%s, size %s", kindname, buf);
   } else {
     print_line(0, "%s, unknown size", kindname);
   }

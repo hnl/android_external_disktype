@@ -102,8 +102,8 @@ void detect_vhd(SECTION *section, int level)
     print_line(level, "Connectix Virtual PC hard disk image, unknown type %d",
 	       type);
   }
-  format_size(s, total_size, 1);
-  print_line(level + 1, "Disk size %s (%llu bytes)", s, total_size);
+  format_size_verbose(s, total_size);
+  print_line(level + 1, "Disk size %s", s);
 
   if (type == 3) {
     /* dynamically sized, set up a mapping data source */
@@ -158,9 +158,9 @@ static SOURCE *init_vhd_source(SECTION *section, int level,
   vs->chunk_count = get_be_long(buf + 28);
   vs->chunk_size = get_be_long(buf + 32);
 
-  format_size(s, vs->chunk_size, 1);
-  print_line(level + 1, "Dynamic sizing uses %lu chunks of %s (%lu bytes)",
-	     vs->chunk_count, s, vs->chunk_size);
+  format_size(s, vs->chunk_size);
+  print_line(level + 1, "Dynamic sizing uses %lu chunks of %s",
+	     vs->chunk_count, s);
 
   if ((u8)vs->chunk_count * vs->chunk_size < total_size) {
     print_line(level + 1, "Error: Sparse parameters don't match total size");

@@ -74,9 +74,8 @@ void detect_iso(SECTION *section, int level)
   /* some other interesting facts */
   blocks = get_le_long(buf + 80);
   blocksize = get_le_short(buf + 128);
-  format_size(s, blocks, blocksize);
-  print_line(level+1, "Data size %s (%llu blocks of %lu bytes)",
-	     s, blocks, blocksize);
+  format_blocky_size(s, blocks, blocksize, "blocks", NULL);
+  print_line(level+1, "Data size %s", s);
 
   for (sector = 17; ; sector++) {
     /* get next descriptor */
@@ -184,7 +183,7 @@ static void dump_boot_catalog(SECTION *section, u8 pos, int level)
   more = (buf[64] == 0x90 || buf[64] == 0x91) ? 1 : 0;
 
   /* print and analyze further */
-  format_size(s, preload, 512);
+  format_size(s, preload * 512);
   print_line(level, "%s %s image, starts at %lu, preloads %s",
 	     bootable ? "Bootable" : "Non-bootable",
 	     media_types[media], start, s);

@@ -35,7 +35,7 @@ void detect_amiga_partmap(SECTION *section, int level)
 {
   int i, off, found;
   unsigned char *buf;
-  char s[256];
+  char s[256], append[64];
   u4 blocksize, part_ptr;
   u8 cylsize, start, size;
 
@@ -88,9 +88,11 @@ void detect_amiga_partmap(SECTION *section, int level)
     cylsize = (u8)get_be_long(buf + 140) * (u8)get_be_long(buf + 148);
     start = get_be_long(buf + 164) * cylsize;
     size = (get_be_long(buf + 168) + 1 - get_be_long(buf + 164)) * cylsize;
-    format_size(s, size, 512);
-    print_line(level, "Partition %d: %s (%llu sectors starting at %llu)",
-               i, s, size, start);
+
+    snprintf(append, 63, " starting at %llu", start);
+    format_blocky_size(s, size, 512, "sectors", append);
+    print_line(level, "Partition %d: %s",
+               i, s);
 
     /* get name */
     get_pstring(buf + 36, s);
