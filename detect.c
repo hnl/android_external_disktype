@@ -51,16 +51,18 @@ void detect_hpfs(SECTION *section, int level);
 /* in cdrom.c */
 void detect_iso(SECTION *section, int level);
 
-/* in unix.c */
+/* in linux.c */
 void detect_ext23(SECTION *section, int level);
 void detect_reiser(SECTION *section, int level);
-void detect_jfs(SECTION *section, int level);
-void detect_xfs(SECTION *section, int level);
 void detect_linux_raid(SECTION *section, int level);
 void detect_linux_lvm(SECTION *section, int level);
 void detect_linux_swap(SECTION *section, int level);
+void detect_linux_misc(SECTION *section, int level);
+
+/* in unix.c */
+void detect_jfs(SECTION *section, int level);
+void detect_xfs(SECTION *section, int level);
 void detect_ufs(SECTION *section, int level);
-void detect_unix_misc(SECTION *section, int level);
 
 /* in compressed.c */
 void detect_compressed(SECTION *section, int level);
@@ -88,13 +90,13 @@ DETECTOR detectors[] = {
   detect_iso,
   detect_ext23,
   detect_reiser,
-  detect_jfs,
-  detect_xfs,
   detect_linux_raid,
   detect_linux_lvm,
   detect_linux_swap,
+  detect_linux_misc,
+  detect_jfs,
+  detect_xfs,
   detect_ufs,
-  detect_unix_misc,
   detect_archive,
   detect_compressed,
   detect_cdimage,
