@@ -101,8 +101,10 @@ static void analyze_file(const char *filename)
     reason = "Is a directory";
   else if (S_ISFIFO(sb.st_mode))
     reason = "Is a FIFO";
+#ifdef S_ISSOCK
   else if (S_ISSOCK(sb.st_mode))
     reason = "Is a socket";
+#endif
   else
     reason = "Is an unknown kind of special file";
 
