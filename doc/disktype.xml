@@ -143,7 +143,27 @@ other operating systems to co-exist on the disk.
 <section>
 <title>Superblocks and Spacing</title>
 <para>
-[to be written]
+Every file system has some place to store global information like
+the size, volume name, and pointers to other structures. This place
+is usually one special sector or block at the beginning of the device.
+Almost all file systems include a certain constant value somewhere with
+that data, dubbed a <firstterm>magic</firstterm> value (or string).
+This is what &disktype; uses to identify file system formats.
+</para>
+<para>
+Some file systems use several such structures, or store backup copies
+at other locations inside the file system. Names are likewise variable.
+The Unix world uses <firstterm>superblock</firstterm> almost exclusively.
+Other terms include <firstterm>boot sector</firstterm>,
+<firstterm>root sector</firstterm>, <firstterm>root block</firstterm>,
+<firstterm>volume descriptor</firstterm> and
+<firstterm>volume header</firstterm>.
+</para>
+<para>
+Many file systems don't put the superblock at the very start of the
+device. The space before the superblock can be used for boot code or
+partition maps. In some cases, one other reason for the offset is
+increased resilience against DOS formatting tools.
 </para>
 </section>
 
