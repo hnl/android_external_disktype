@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.17 2003/05/25 07:14:39 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.18 2003/06/15 07:15:11 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -63,12 +63,14 @@ Improved file systems: UFS, ext2/ext3.
 Improved other structures: DOS partition map, GRUB boot code.
 
 
-Version 6 is still under development. It now detects blank disks. Size
-printouts use the prefixes for binary multiples as defined by IEC. In
-other news:
+Version 6 was released on June 15, 2003. It now detects blank
+disks. Size printouts use the prefixes for binary multiples as defined
+by IEC. On Linux, the TOC of a CD can be read using ioctl's. In other
+news:
 
 Added file systems: UDF.
-Added other structures: Solaris x86 disklabel (vtoc).
+Added other structures: Solaris x86 disklabel (vtoc), Solaris SPARC
+  disklabel.
 Improved file systems: ISO9660.
 Improved other structures: -
 
