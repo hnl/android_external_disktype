@@ -133,6 +133,40 @@ void detect_reiser(SECTION *section, int level)
 }
 
 /*
+ * JFS for Linux
+ */
+
+void detect_jfs(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int version;
+  char s[256];
+  u4 blocksize;
+  u8 blockcount;
+
+  if (get_buffer(section, 32768, 512, (void **)&buf) < 512)
+    return;
+
+  /* check signature */
+  if (memcmp(buf, "JFS1", 4) != 0)
+    return;
+
+  /* tell the user */
+  version = get_le_long(buf + 4);
+  print_line(level, "JFS file system, version %d", version);
+
+  memcpy(s, buf + 101, 11);
+  s[11] = 0;
+  print_line(level + 1, "Volume name \"%s\"", s);
+
+  blocksize = get_le_long(buf + 24);
+  blockcount = get_le_quad(buf + 8);
+  format_size(s, blockcount, blocksize);
+  print_line(level + 1, "Volume size %s (%llu h/w blocks of %lu bytes)",
+	     s, blockcount, blocksize);
+}
+
+/*
  * Linux RAID persistent superblock
  */
 

@@ -47,6 +47,7 @@ void detect_iso(SECTION *section, int level);
 /* in unix.c */
 void detect_ext23(SECTION *section, int level);
 void detect_reiser(SECTION *section, int level);
+void detect_jfs(SECTION *section, int level);
 void detect_linux_raid(SECTION *section, int level);
 void detect_linux_lvm(SECTION *section, int level);
 void detect_linux_swap(SECTION *section, int level);
@@ -76,6 +77,7 @@ DETECTOR detectors[] = {
   detect_iso,
   detect_ext23,
   detect_reiser,
+  detect_jfs,
   detect_linux_raid,
   detect_linux_lvm,
   detect_linux_swap,
