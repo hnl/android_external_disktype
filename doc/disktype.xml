@@ -170,7 +170,17 @@ increased resilience against DOS formatting tools.
 <section>
 <title>Inodes and Links</title>
 <para>
-[to be written]
+While plain file systems directly associate a file name in a directory with
+the file data, Unix file systems add a layer of indirection between the two,
+the <firstterm>inodes</firstterm>. The directory entries only store the file name
+and an inode number; all other data (even the type of the entry) is stored
+in the inode structure. It is possible to have several directory entries
+pointing to the same inode. For files, this is called a
+<firstterm>hard link</firstterm>. For directories, this is used by the
+file system internally to link back to parent directories.
+Hard links are somewhat fragile and limited to single file systems.
+<firstterm>Symbolic links</firstterm> don't link directly to the inode, but
+store a (usually relative) path, in a separate inode.
 </para>
 </section>
 
