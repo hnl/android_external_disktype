@@ -65,7 +65,7 @@ void detect_iso(SECTION *section, int level)
   blocks = get_le_long(buf + 80);
   blocksize = get_le_short(buf + 128);
   format_size(s, blocks, blocksize);
-  print_line(level+1, "Data Size %s (%llu blocks of %lu bytes)",
+  print_line(level+1, "Data size %s (%llu blocks of %lu bytes)",
 	     s, blocks, blocksize);
 
   for (sector = 17; ; sector++) {
