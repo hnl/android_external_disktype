@@ -1,6 +1,6 @@
-$Id: README,v 1.5 2003/03/14 16:20:16 chrisp Exp $   -*- text -*-
+$Id: README,v 1.6 2003/04/15 15:08:19 chrisp Exp $   -*- text -*-
 
- disktype 3
+ disktype 4
 ============
 
 The purpose of disktype is to detect the content format of a disk or
@@ -8,18 +8,18 @@ disk image. It knows about common file systems, partition tables, and
 boot codes.
 
 The program is written in C and is designed to compile on any modern
-Unix flavour. It requires no special libraries, except on Mac OS X,
-where it uses the CoreServices framework to get the Mac OS type and
-creator code of a file.
+Unix flavour. It is self-contained and doesn't need special libraries,
+headers, or data files. As an exception, the CoreServices framework is
+used on Mac OS X to get the Mac OS type and creator code of a file.
 
 
  Installation
 --------------
 
 GNU make is required to build disktype. The Makefile is set up to use
-GCC, but can be edited if required. Alternatively, the standard
-variables CC, CPPFLAGS, CFLAGS, LDFLAGS, and LIBS can be changed from
-the make command line.
+GCC, but disktype should compile with any C compiler. To change the
+compiler, you can edit the Makefile or set the standard variables CC,
+CPPFLAGS, CFLAGS, LDFLAGS, and LIBS from the make command line.
 
 Running make results in the binary 'disktype'. Copy it to a 'bin'
 directory of your choice, optionally stripping it on the way. That's
@@ -43,7 +43,7 @@ The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
   ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs, UFS (some
-  variations), JFS.
+  variations), JFS, Linux squashfs, XFS.
 
 Partition maps: DOS/PC style, Apple.
 
