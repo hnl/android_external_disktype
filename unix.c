@@ -277,7 +277,7 @@ void detect_bsd_disklabel(SECTION *section, int level)
 
   for (i = 0; i < partcount; i++) {
     pn = 'a' + i;
-    if (types[i] == 0) {
+    if (types[i] == 0 && i != 2) {
       print_line(level, "Partition %c: unused", pn);
       continue;
     }
@@ -288,6 +288,9 @@ void detect_bsd_disklabel(SECTION *section, int level)
 
     print_line(level + 1, "Type %d (%s)",
 	       types[i], get_name_for_type(types[i]));
+
+    if (types[i] == 0 || sizes[i] == 0)
+      continue;
 
     offset = (u8)starts[i] * 512;
     if (offset < base_offset) {
