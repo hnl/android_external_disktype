@@ -12,6 +12,9 @@ Other disklabels: Solaris, Sun, SGI, OSF, Ultrix, Amiga, Acorn, LDM,
 Other FS: EFS, BFS, FFS, AFFS, ADFS, JFFS1/2, QNX4 FS, SysV FS,
   FreeVxFS
 
+Improve CD raw image detection -- actually look at the data instead of
+guessing from the size.
+
 Superblocks document
 
 Reverse-engineer the format of Apple disk images (esp. .dmg's)
