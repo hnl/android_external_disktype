@@ -32,16 +32,24 @@
 
 #define DEBUG 0
 
+#ifndef FD_ZERO
+#define DECOMPRESS 0
+#else
+#define DECOMPRESS 1
+#endif
+
 /*
  * types
  */
 
+#if DECOMPRESS
 typedef struct compressed_source {
   SOURCE c;
   u8 offset, write_pos, write_max;
   int write_pipe, read_pipe, nfds;
   pid_t pid;
 } COMPRESSED_SOURCE;
+#endif
 
 /*
  * helper functions
@@ -50,10 +58,12 @@ typedef struct compressed_source {
 static void handle_compressed(SECTION *section, int level,
 			      int off, const char *program);
 
+#if DECOMPRESS
 static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size,
 				      const char *program);
 static u8 read_compressed(SOURCE *s, u8 pos, u8 len, void *buf);
 static void close_compressed(SOURCE *s);
+#endif
 
 /*
  * compressed file detection
@@ -111,6 +121,7 @@ void detect_compressed(SECTION *section, int level)
 static void handle_compressed(SECTION *section, int level,
 			      int off, const char *program)
 {
+#if DECOMPRESS
   SOURCE *s;
   u8 size;
 
@@ -122,11 +133,16 @@ static void handle_compressed(SECTION *section, int level,
 			     section->pos + off, size, program);
   analyze_source(s, level + 1);
   close_source(s);
+#else
+  print_line(level + 1, "Decompression disabled on this system");
+#endif
 }
 
 /*
  * initialize the decompression
  */
+
+#if DECOMPRESS
 
 static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size,
 				      const char *program)
@@ -350,5 +366,7 @@ static void close_compressed(SOURCE *s)
   kill(cs->pid, SIGHUP);
   waitpid(cs->pid, &status, 0);
 }
+
+#endif /* DECOMPRESS */
 
 /* EOF */
