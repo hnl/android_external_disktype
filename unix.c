@@ -371,7 +371,7 @@ void detect_unix_misc(SECTION *section, int level)
   int magic, fill, off, en;
   unsigned char *buf;
   char s[256];
-  u8 size, blocks;
+  u8 size, blocks, blocksize;
 
   fill = get_buffer(section, 0, 2048, (void **)&buf);
   if (fill < 512)
@@ -460,6 +460,27 @@ void detect_unix_misc(SECTION *section, int level)
 	print_line(level + 1, "Data size %s (%llu blocks of -assumed- 4K)",
 		   s, blocks);
       }
+    }
+  }
+
+  /* Linux squashfs */
+  for (en = 0; en < 2; en++) {
+    if (get_ve_long(en, buf) == 0x73717368) {
+      int major, minor;
+
+      major = get_ve_short(en, buf + 28);
+      minor = get_ve_short(en, buf + 30);
+      print_line(level, "Linux squashfs, version %d.%d, %s",
+		 major, minor, get_ve_name(en));
+
+      size = get_ve_long(en, buf + 8);
+      blocksize = get_ve_short(en, buf + 32);
+
+      format_size(s, size, 1);
+      print_line(level + 1, "Compressed size %s (%llu bytes)",
+		 s, size);
+      format_size(s, blocksize, 1);
+      print_line(level + 1, "Block size %s", s);
     }
   }
 
