@@ -285,13 +285,13 @@ void detect_bsd_disklabel(SECTION *section, int level)
 
   if (partcount <= 8) {
     print_line(level, "BSD disklabel (at sector 1), %d partitions", partcount);
-  } else if (partcount > 8 && partcount <= 22) {
+  } else if (partcount > 8 && partcount <= 16) {
     print_line(level, "BSD disklabel (at sector 1), %d partitions (more than usual, but valid)",
 	       partcount);
-  } else if (partcount > 22) {
-    print_line(level, "BSD disklabel (at sector 1), %d partitions (broken, limiting to 22)",
+  } else if (partcount > 16) {
+    print_line(level, "BSD disklabel (at sector 1), %d partitions (broken, limiting to 16)",
 	       partcount);
-    partcount = 22;
+    partcount = 16;
   }
   if (sectsize != 512) {
     print_line(level + 1, "Unusual sector size %d bytes, your mileage may vary");
@@ -304,7 +304,7 @@ void detect_bsd_disklabel(SECTION *section, int level)
     sizes[i] = get_le_long(buf + off);
     types[i] = buf[off + 12];
 
-    if (types[i] != 0) {
+    if (types[i] != 0 || i == 2) {
       offset = (u8)starts[i] * 512;
       if (!min_offset_valid || offset < min_offset) {
 	min_offset = offset;
