@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
   print_line(0, "");
   for (i = 1; i < argc; i++) {
     analyze_file(argv[i]);
+    print_line(0, "");
   }
 
   return 0;
@@ -148,7 +149,6 @@ static void analyze_file(const char *filename)
 
   /* finish it up */
   close_source(s);
-  print_line(0, "");
 }
 
 /*
