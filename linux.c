@@ -419,7 +419,7 @@ void detect_linux_misc(SECTION *section, int level)
 
 void detect_linux_loader(SECTION *section, int level)
 {
-  int fill;
+  int fill, executable, id;
   unsigned char *buf;
 
   if (section->flags & FLAG_IN_DISKLABEL)
@@ -429,15 +429,39 @@ void detect_linux_loader(SECTION *section, int level)
   if (fill < 512)
     return;
 
+  executable = (get_le_short(buf + 510) == 0xaa55) ? 1 : 0;
+
   /* boot sector stuff */
-  if (memcmp(buf + 2, "LILO", 4) == 0)
+  if (executable && memcmp(buf + 2, "LILO", 4) == 0)
     print_line(level, "LILO boot code");
-  if (memcmp(buf + 3, "SYSLINUX", 8) == 0)
+  if (executable && memcmp(buf + 3, "SYSLINUX", 8) == 0)
     print_line(level, "SYSLINUX boot code");
-  if (find_memory(buf, 512, "GRUB ", 5) >= 0)
-    print_line(level, "GRUB boot code");
   if (fill >= 1024 && find_memory(buf, 1024, "ISOLINUX", 8) >= 0)
     print_line(level, "ISOLINUX boot code");
+
+  /* we know GRUB a little better now... */
+  if (executable &&
+      find_memory(buf, 512, "Geom\0Hard Disk\0Read\0 Error\0", 27) >= 0) {
+    if (buf[0x3e] == 3) {
+      print_line(level, "GRUB boot code, compat version %d.%d, boot drive 0x%02x",
+		 (int)buf[0x3e], (int)buf[0x3f], (int)buf[0x40]);
+    } else if (executable && buf[0x1bc] == 2 && buf[0x1bd] <= 2) {
+      id = buf[0x3e];
+      if (id == 0x10) {
+	print_line(level, "GRUB boot code, compat version %d.%d, normal version",
+		   (int)buf[0x1bc], (int)buf[0x1bd]);
+      } else if (id == 0x20) {
+	print_line(level, "GRUB boot code, compat version %d.%d, LBA version",
+		   (int)buf[0x1bc], (int)buf[0x1bd]);
+      } else {
+	print_line(level, "GRUB boot code, compat version %d.%d",
+		   (int)buf[0x1bc], (int)buf[0x1bd]);
+      }
+    } else {
+      print_line(level, "GRUB boot code, unknown compat version %d",
+		 buf[0x3e]);
+    }
+  }
 
   /* Linux kernel loader */
   if (fill >= 1024 && memcmp((char *)buf + 512 + 2, "HdrS", 4) == 0) {
