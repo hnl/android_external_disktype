@@ -8,7 +8,9 @@ CC = gcc
 OBJS   = main.o lib.o \
          buffer.o file.o cdimage.o vpc.o compressed.o \
          detect.o apple.o amiga.o atari.o dos.o cdrom.o \
-         linux.o unix.o beos.o archives.o
+         linux.o unix.o beos.o archives.o \
+         udf.o blank.o
+
 TARGET = disktype
 
 CPPFLAGS = -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64

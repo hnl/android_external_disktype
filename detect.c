@@ -52,6 +52,9 @@ void detect_hpfs(SECTION *section, int level);
 /* in cdrom.c */
 void detect_iso(SECTION *section, int level);
 
+/* in udf.c */
+void detect_udf(SECTION *section, int level);
+
 /* in linux.c */
 void detect_ext23(SECTION *section, int level);
 void detect_reiser(SECTION *section, int level);
@@ -86,6 +89,9 @@ void detect_vhd(SECTION *section, int level);
 /* in archives.c */
 void detect_archive(SECTION *section, int level);
 
+/* in blank.c */
+void detect_blank(SECTION *section, int level);
+
 /*
  * list of detectors
  */
@@ -112,6 +118,7 @@ DETECTOR detectors[] = {
   detect_ntfs,
   detect_hpfs,
   detect_iso,
+  detect_udf,
   detect_ext23,
   detect_reiser,
   detect_linux_raid,
@@ -127,6 +134,9 @@ DETECTOR detectors[] = {
   /* 5: file formats */
   detect_archive,
   detect_compressed,  /* this is here because of boot disks */
+  /* 6: blank formatted disk */
+  detect_blank,
+
  NULL };
 
 
