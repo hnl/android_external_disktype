@@ -130,6 +130,14 @@ static void analyze_file(const char *filename)
     return;
   }
 
+  /* (try to) guard against TTY character devices */
+  if (filekind == 2) {
+    if (isatty(fd)) {
+      error("%.300s: Is a TTY device", filename);
+      return;
+    }
+  }
+
   /* create a source */
   s = init_file_source(fd, filekind);
 
