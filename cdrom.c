@@ -219,6 +219,16 @@ void detect_cdrom_misc(SECTION *section, int level)
       memcmp(buf + 0x28, "CD-ROM", 6) == 0) {
     print_line(level, "3DO CD-ROM file system");
   }
+
+  /* get sector 32 */
+  if (get_buffer(section, 32*2048, 2048, (void **)&buf) < 2048)
+    return;
+
+  /* Xbox DVD file system */
+  if (memcmp(buf, "MICROSOFT*XBOX*MEDIA", 20) == 0 &&
+      memcmp(buf + 0x7ec, "MICROSOFT*XBOX*MEDIA", 20) == 0) {
+    print_line(level, "Xbox DVD file system");
+  }
 }
 
 /* EOF */

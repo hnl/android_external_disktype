@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.23 2004/12/18 17:21:59 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.24 2005/01/31 20:11:47 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -87,7 +87,7 @@ Improved other structures: -
 Version 8 is still under development. It features the following
 improvements:
 
-Added file systems: Reiser4.
+Added file systems: Reiser4, Xbox DVD file system.
 Added other structures: Linux LVM2 physical volumes.
 Improved file systems: -
 Improved other structures: Linux LVM1 physical volumes.
