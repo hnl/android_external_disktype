@@ -328,6 +328,16 @@ void get_pstring(void *from, char *to)
   to[len] = 0;
 }
 
+void get_padded_string(void *from, int len, char pad, char *to)
+{
+  int pos;
+
+  get_string(from, len, to);
+
+  for (pos = strlen(to) - 1; pos >= 0 && to[pos] == pad; pos--)
+    to[pos] = 0;
+}
+
 int find_memory(void *haystack, int haystack_len,
                 void *needle, int needle_len)
 {

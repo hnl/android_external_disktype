@@ -134,6 +134,7 @@ const char * get_ve_name(int endianness);
 
 void get_string(void *from, int len, char *to);
 void get_pstring(void *from, char *to);
+void get_padded_string(void *from, int len, char pad, char *to);
 
 int find_memory(void *haystack, int haystack_len,
 		void *needle, int needle_len);
