@@ -106,9 +106,9 @@ void detect_xfs(SECTION *section, int level)
 void detect_ufs(SECTION *section, int level)
 {
   unsigned char *buf;
-  int i, at, en, offsets[5] = { 0, 8, 64, 256, -1 };
+  int i, at, en, namelen, offsets[5] = { 0, 8, 64, 256, -1 };
   u4 magic;
-  char s[512];
+  char s[256];
 
   /* NextStep/OpenStep apparently can move the superblock further into
      the device. Linux uses steps of 8 blocks (of the applicable block
@@ -141,17 +141,33 @@ void detect_ufs(SECTION *section, int level)
       } else
 	continue;
 
-      /* get volume name */
+      /* volume name by FreeBSD convention */
       memcpy(s, buf + 680, 32);
       s[32] = 0;
       if (s[0])
-	print_line(level + 1, "Volume name \"%s\"", s);
+	print_line(level + 1, "Volume name \"%s\" (in superblock)", s);
 
       /* last mount point */
-      memcpy(s, buf + 212, 468);
-      s[468] = 0;
+      memcpy(s, buf + 212, 255);  /* actually longer, but varies */
+      s[255] = 0;
       if (s[0])
 	print_line(level + 1, "Last mounted at \"%s\"", s);
+
+      /* volume name by Darwin convention */
+      if (get_buffer(section, 7 * 1024, 1024, (void **)&buf) == 1024) {
+	if (get_ve_long(en, buf) == 0x4c41424c &&  /* "LABL" */
+	    get_ve_long(en, buf + 8) == 1) {       /* version 1 */
+	  namelen = get_ve_short(en, buf + 16);
+	  if (namelen > 255)
+	    namelen = 255;
+	  memcpy(s, buf + 18, namelen);
+	  s[namelen] = 0;
+	  print_line(level + 1, "Volume name \"%s\" (in label v%lu)",
+		     s, get_ve_long(en, buf + 8));
+	}
+      }
+
+      return;
     }
   }
 }
