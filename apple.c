@@ -102,11 +102,13 @@ void detect_apple_partmap(SECTION *section, int level)
 
 void detect_apple_volume(SECTION *section, int level)
 {
-  char s[256], t[256];
+  char s[256], t[256], volname[514];
   unsigned char *buf;
-  u2 magic, version;
+  u2 magic, version, volnamelen;
   u4 blocksize, blockstart;
   u8 blockcount, offset;
+  u8 catalogstart, cataloglength;
+  u4 firstleafnode, nodesize;
 
   if (get_buffer(section, 1024, 512, (void **)&buf) < 512)
     return;
@@ -150,7 +152,49 @@ void detect_apple_volume(SECTION *section, int level)
     format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
     print_line(level + 1, "Volume size %s", s);
 
-    /* TODO: is there a volume name somewhere? */
+    /* To read the volume name, we have to parse some structures...
+       This code makes many assumptions which are usually true,
+       but don't have to be. */
+
+    /* get catalog file location on disk */
+    /* ASSUMPTION: This reads the location of the first extent
+       of the catalog file. If the catalog file is fragmented, we'll
+       be working with only the first fragment, which may not include
+       the node we're looking for. */
+    catalogstart = get_be_long(buf + 288) * blocksize;
+    cataloglength = get_be_long(buf + 292) * blocksize;
+    /* limit to actual length (byte count instead of block count) */
+    if (cataloglength > get_be_quad(buf + 272))
+      cataloglength = get_be_quad(buf + 272);
+
+    /* read header node of B-tree (4096 is the minimum node size) */
+    if (get_buffer(section, catalogstart, 4096, (void **)&buf) < 4096)
+      return;
+    firstleafnode = get_be_long(buf + 24);
+    nodesize = get_be_short(buf + 32);
+    if (nodesize < 4096)
+      return;  /* illegal value */
+
+    /* read first lead node */
+    if ((firstleafnode + 1) * nodesize > cataloglength)
+      return;  /* the location is beyond the end of the catalog */
+    if (get_buffer(section, catalogstart + firstleafnode * nodesize,
+		   nodesize, (void **)&buf) < nodesize)
+      return;
+
+    /* the first record in this leaf node should be for parent id 1 */
+    if (buf[8] != 0xff)
+      return;  /* not a leaf node */
+    if (get_be_short(buf + 14) <= 6)
+      return;  /* key of first record is too short to contain a name */
+    if (get_be_long(buf + 16) != 1)
+      return;  /* parent folder id is not "root parent" */
+    volnamelen = get_be_short(buf + 20);
+    memcpy(volname, buf + 22, volnamelen * 2);
+    volname[volnamelen*2] = 0;
+    volname[volnamelen*2+1] = 0;
+    format_unicode(volname, t);
+    print_line(level + 1, "Volume name \"%s\"", t);
   }
 }
 
