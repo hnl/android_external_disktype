@@ -157,6 +157,7 @@ void detect_dos_partmap(SECTION *section, int level)
   u4 start, size, starts[4], sizes[4];
   int extpartnum = 5;
   char s[256];
+  SECTION rs;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -211,7 +212,6 @@ void detect_dos_partmap(SECTION *section, int level)
       detect_dos_partmap_ext(section, start, level + 1, &extpartnum);
     } else {
       /* recurse for content detection */
-      SECTION rs;
       rs.source = section->source;
       rs.pos = section->pos + (u8)start * 512;
       rs.size = (u8)size * 512;
@@ -228,6 +228,7 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
   int i, off, type, types[4];
   u4 start, size, starts[4], sizes[4];
   char s[256];
+  SECTION rs;
 
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
     /* read sector from linked list */
@@ -268,7 +269,6 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 
       } else {
 	/* logical partition */
-	SECTION rs;
 
 	format_size(s, size, 512);
 	print_line(level, "Partition %d: %s (%lu sectors starting at %llu+%lu)",
@@ -297,6 +297,7 @@ void detect_fat(SECTION *section, int level)
   int i, score, fattype;
   u4 sectsize, clustersize, reserved, fatcount, dirsize, fatsize;
   u8 sectcount, clustercount;
+  u2 atari_csum;
   unsigned char *buf;
   char s[256];
 
@@ -361,9 +362,20 @@ void detect_fat(SECTION *section, int level)
   else
     fattype = 2;
 
+  /* check for ATARI ST boot checksum */
+  atari_csum = 0;
+  for (i = 0; i < 512; i += 2)
+    atari_csum += get_be_short(buf + i);
+
   /* tell the user */
-  print_line(level, "%s file system (hints score %d of %d)",
-	     fatnames[fattype], score, 5);
+  s[0] = 0;
+  if (atari_csum == 0x1234)
+    strcpy(s, ", ATARI ST bootable");
+  print_line(level, "%s file system (hints score %d of %d%s)",
+	     fatnames[fattype], score, 5, s);
+
+  if (sectsize > 512)
+    print_line(level + 1, "Unusual sector size %lu bytes", sectsize);
 
   format_size(s, clustercount, clustersize * sectsize);
   print_line(level + 1, "Volume size %s (%llu clusters of %lu bytes)",
