@@ -41,7 +41,7 @@ typedef struct cdimage_source {
  */
 
 static SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset);
-static u8 read_cdimage(SOURCE *s, u8 pos, u8 len, void *buf);
+static int read_block_cdimage(SOURCE *s, u8 pos, void *buf);
 
 /*
  * cd image detection
@@ -90,6 +90,9 @@ void detect_cdimage(SECTION *section, int level)
 
   /* destroy wrapped source */
   close_source(s);
+
+  /* don't run other analyzers */
+  stop_detect();
 }
 
 /*
@@ -105,13 +108,13 @@ static SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset)
     bailout("Out of memory");
   memset(src, 0, sizeof(CDIMAGE_SOURCE));
 
+  src->c.size = ((foundation->size - offset + 304) / 2352) * 2048;
   src->c.sequential = 0;
+  src->c.blocksize = 2048;
   src->c.foundation = foundation;
-  src->c.read = read_cdimage;
+  src->c.read_block = read_block_cdimage;
   src->c.close = NULL;
   src->off = offset;
-
-  src->c.size = ((foundation->size - offset + 304) / 2352) * 2048;
 
   return (SOURCE *)src;
 }
@@ -120,67 +123,21 @@ static SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset)
  * raw read
  */
 
-static u8 read_cdimage(SOURCE *s, u8 pos, u8 len, void *buf)
+static int read_block_cdimage(SOURCE *s, u8 pos, void *buf)
 {
   SOURCE *fs = s->foundation;
-  int skip, askfor;
-  u8 filepos, fill, got;
-  char *p, *filebuf;
-  u8 off = ((CDIMAGE_SOURCE *)s)->off;
+  u8 filepos;
+  void *filebuf;
 
-  p = (char *)buf;
-  got = 0;
+  /* translate position */
+  filepos = (pos / 2048) * 2352 + ((CDIMAGE_SOURCE *)s)->off;
 
-  /* translate position into image sectors */
-  filepos = (pos / 2048) * 2352 + off;
-  skip = (int)(pos & 2047);
+  /* read from lower layer */
+  if (get_buffer_real(fs, filepos, 2048, &filebuf) < 2048)
+    return 0;
+  memcpy(buf, filebuf, 2048);
 
-  /* special case if we're not aligned (unlikely, but still...) */
-  if (len > 0 && skip > 0) {
-    /* read from lower layer */
-    askfor = 2048;
-    if (len < 2048)
-      askfor = len;
-    fill = get_buffer_real(fs, filepos, askfor, (void **)&filebuf);
-
-    /* copy to our buffer */
-    if (fill <= skip)
-      return got;
-    memcpy(p, filebuf + skip, fill - skip);
-
-    /* adjust state for next iteration */
-    len -= (fill - skip);
-    got += (fill - skip);
-    p += (fill - skip);
-    filepos += 2352;
-
-    if (fill < askfor)
-      return got;
-  }
-
-  while (len > 0) {
-    /* read from lower layer */
-    askfor = 2048;
-    if (len < 2048)
-      askfor = len;
-    fill = get_buffer_real(fs, filepos, askfor, (void **)&filebuf);
-
-    /* copy to our buffer */
-    if (fill <= 0)
-      break;
-    memcpy(p, filebuf, fill);
-
-    /* adjust state for next iteration */
-    len -= fill;
-    got += fill;
-    p += fill;
-    filepos += 2352;
-
-    if (fill < askfor)
-      break;
-  }
-
-  return got;
+  return 1;
 }
 
 /* EOF */
