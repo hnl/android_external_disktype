@@ -44,22 +44,21 @@ void detect_blank(SECTION *section, int level)
   int block_size = 512;
   unsigned char code;
 
-  if(get_buffer(section, 0, 1, (void **)&buffer) < 1)
+  if (get_buffer(section, 0, 1, (void **)&buffer) < 1)
     return;
   code = buffer[0];
 
-  // Look at first 4096 blocks of 512 bytes
-  for(i = 0; i < max_blocks; i++) {
+  /* Look at first 4096 blocks of 512 bytes */
+  for (i = 0; i < max_blocks; i++) {
 
-    if(get_buffer(section, i * block_size, block_size, (void **)&buffer) < block_size)
+    if (get_buffer(section, i * block_size, block_size, (void **)&buffer) < block_size)
       return;
 
-    for(j = 0; j < block_size; j++) {
-      
+    for (j = 0; j < block_size; j++) {
       if (buffer[j] != code)
 	return;
     }
   }
 
-  print_line(level+0, "Blank disk/medium");
+  print_line(level, "Blank disk/medium");
 }
