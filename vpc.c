@@ -140,6 +140,7 @@ static SOURCE *init_vhd_source(SECTION *section, int level,
   unsigned char *buf;
   u8 map_offset;
   u4 map_size;
+  char s[256];
 
   /* allocate and init source structure */
   vs = (VHD_SOURCE *)malloc(sizeof(VHD_SOURCE));
@@ -164,19 +165,22 @@ static SOURCE *init_vhd_source(SECTION *section, int level,
   vs->chunk_count = get_be_long(buf + 28);
   vs->chunk_size = get_be_long(buf + 32);
 
+  format_size(s, vs->chunk_size, 1);
+  print_line(level + 1, "Dynamic sizing uses %lu chunks of %s (%lu bytes)",
+	     vs->chunk_count, s, vs->chunk_size);
+
   if ((u8)vs->chunk_count * vs->chunk_size < total_size) {
-    print_line(level + 1, "Sparse parameters don't match total size");
+    print_line(level + 1, "Error: Sparse parameters don't match total size");
     goto errorexit;
   }
   if (vs->chunk_size < 4096) {
-    /* would invalidate our alignment assumptions */
-    print_line(level + 1, "Sparse chunk size too small (%lu bytes)",
+    print_line(level + 1, "Error: Sparse chunk size too small (%lu bytes)",
 	       vs->chunk_size);
     goto errorexit;
   }
   if (vs->chunk_size > 2*1024*1024) {
     /* written-to bitmap wouldn't fit in one sector */
-    print_line(level + 1, "Sparse chunk size too large (%lu bytes)",
+    print_line(level + 1, "Error: Sparse chunk size too large (%lu bytes)",
 	       vs->chunk_size);
     goto errorexit;
   }
