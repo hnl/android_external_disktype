@@ -201,7 +201,7 @@ void format_uuid(void *uuid, char *to)
   if ((variant & 4) == 0) {         /* 0 x x */
     strcpy(to, " (NCS)");
   } else if ((variant & 2) == 0) {  /* 1 0 x */
-    sprintf(to, " (DCE, v%1.1d)", variant);
+    sprintf(to, " (DCE, v%1.1d)", version);
   } else if ((variant & 1) == 0) {  /* 1 1 0 */
     strcpy(to, " (MS GUID)");
   } else {                          /* 1 1 1 */
