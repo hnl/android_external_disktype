@@ -173,6 +173,58 @@ void detect_ufs(SECTION *section, int level)
 }
 
 /*
+ * System V file system
+ */
+
+void detect_sysv(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int i, at, en, offsets[5] = { 512, 1024, -1 };
+  s4 blocksize_code;
+  char s[256];
+
+  for (i = 0; offsets[i] >= 0; i++) {
+    at = offsets[i];
+    if (get_buffer(section, at, 1024, (void **)&buf) < 1024)
+      break;
+
+    for (en = 0; en < 2; en++) {
+      if (get_ve_long(en, buf + 1016) == 0x2b5544) {
+	blocksize_code = get_ve_long(en, buf + 1020);
+	s[0] = 0;
+	if (blocksize_code == 1)
+	  strcpy(s, "512 byte blocks");
+	else if (blocksize_code == 2)
+	  strcpy(s, "1K blocks");
+	else if (blocksize_code == 3)
+	  strcpy(s, "2K blocks");
+	else
+	  snprintf(s, 255, "unknown block size code %d", (int)blocksize_code);
+
+	print_line(level, "XENIX file system (SysV variant), %s, %s",
+		   get_ve_name(en), s);
+	return;
+      }
+
+      if (get_ve_long(en, buf + 504) == 0xfd187e20) {
+	blocksize_code = get_ve_long(en, buf + 508);
+	s[0] = 0;
+	if (blocksize_code == 1)
+	  strcpy(s, "512 byte blocks");
+	else if (blocksize_code == 2)
+	  strcpy(s, "1K blocks");
+	else
+	  snprintf(s, 255, "unknown block size code %d", (int)blocksize_code);
+
+	print_line(level, "SysV file system, %s, %s",
+		   get_ve_name(en), s);
+	return;
+      }
+    }
+  }
+}
+
+/*
  * BSD disklabel
  */
 
