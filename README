@@ -1,6 +1,6 @@
-$Id: README,v 1.13 2004/03/28 09:45:01 chrisp Exp $   -*- text -*-
+$Id: README,v 1.14 2005/02/21 20:46:01 chrisp Exp $   -*- text -*-
 
- disktype 7
+ disktype 8
 ============
 
 The purpose of disktype is to detect the content format of a disk or
@@ -56,15 +56,15 @@ for some example command lines.
 The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, NTFS, HPFS, MFS, HFS, HFS Plus,
-  ISO9660, ext2/ext3, Minix, ReiserFS, Linux romfs, Linux cramfs,
-  Linux squashfs, UFS (some variations), SysV FS (some variations),
-  JFS, XFS, Amiga FS/FFS, BeOS BFS, QNX4 FS, UDF, 3DO CD-ROM file
-  system, Veritas VxFS.
+  ISO9660, ext2/ext3, Minix, ReiserFS, Reiser4, Linux romfs, Linux
+  cramfs, Linux squashfs, UFS (some variations), SysV FS (some
+  variations), JFS, XFS, Amiga FS/FFS, BeOS BFS, QNX4 FS, UDF, 3DO
+  CD-ROM file system, Veritas VxFS, Xbox DVD file system.
 
 Partitioning: DOS/PC style, Apple, Amiga "Rigid Disk", ATARI ST
-  (AHDI3), BSD disklabel, Linux RAID physical disks, Linux LVM
-  physical volumes, Solaris x86 disklabel (vtoc), Solaris SPARC
-  disklabel.
+  (AHDI3), BSD disklabel, Linux RAID physical disks, Linux LVM1
+  physical volumes, Linux LVM2 physical volumes, Solaris x86 disklabel
+  (vtoc), Solaris SPARC disklabel.
 
 Other structures: Debian split floppy header, Linux swap.
 

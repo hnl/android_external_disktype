@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.Dd March 28, 2004
+.Dd Feb 21, 2005
 .Dt DISKTYPE 1
 .\"
 .Sh NAME
@@ -36,14 +36,15 @@ The following formats are recognized by this version of
 .Bl -tag -width flag
 .It File systems:
 FAT12/FAT16/FAT32, NTFS, HPFS, MFS, HFS, HFS Plus,
-ISO9660, ext2/ext3, Minix, ReiserFS, Linux romfs, Linux cramfs,
-Linux squashfs, UFS (some variations), SysV FS (some variations),
-JFS, XFS, Amiga FS/FFS, BeOS BFS, QNX4 FS, UDF, 3DO CD-ROM file
-system, Veritas VxFS.
+ISO9660, ext2/ext3, Minix, ReiserFS, Reiser4, Linux romfs, Linux
+cramfs, Linux squashfs, UFS (some variations), SysV FS (some
+variations), JFS, XFS, Amiga FS/FFS, BeOS BFS, QNX4 FS, UDF, 3DO
+CD-ROM file system, Veritas VxFS, Xbox DVD file system.
 .It Partitioning:
 DOS/PC style, Apple, Amiga "Rigid Disk", ATARI ST (AHDI3),
-BSD disklabel, Linux RAID physical disks, Linux LVM physical volumes,
-Solaris x86 disklabel (vtoc), Solaris SPARC disklabel.
+BSD disklabel, Linux RAID physical disks, Linux LVM1 physical volumes,
+Linux LVM2 physical volumes, Solaris x86 disklabel (vtoc),
+Solaris SPARC disklabel.
 .It Other structures:
 Debian split floppy header, Linux swap.
 .It Disk images:
