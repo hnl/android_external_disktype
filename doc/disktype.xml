@@ -74,13 +74,8 @@ others can occur in either one. This will be noted as appropriate.
 Mass storage devices operate on chunks of data, usually called
 sectors. The size of these device sectors varies, but is fixed for any
 one device. Hard disks and floppies usually use 512 bytes, while CDs
-use 2048 bytes.
-</para>
-<para>
-While today it is customary to number all sectors sequentially and let
-the drive's firmware figure out the rest, that wasn't always so. Hard
-disks (and floppies) are actually organized in three dimensions. They
-consist of one or more disks [...]
+use 2048 bytes. Today, it is usual to number all sectors sequentially
+and leave the details to the device.
 </para>
 <para>
 File systems also operate on chunks at a time, but they don't need to
@@ -90,7 +85,30 @@ allocation unit are also common.
 </para>
 </section>
 
-<!-- cylinders, heads, tracks -->
+<section>
+<title>Drive Geometry Cruft</title>
+<para>
+There were times when it was not customary to access hard disk sectors
+by their sequence number. Hard disks (and floppy disks as well) are
+actually organized in three dimensions. There are several rotating
+disks, each with two sides (or surfaces). Each surface has a head used
+to read and write data. That head, or actually the whole stack of
+heads, can be moved between the center and the rim of the disk.  Each
+surface consists of concentric tracks, which contain the actual
+sectors. A cylinder is all tracks of all surfaces at a certain radius
+taken together. Put another way, all sectors in one cylinder can be
+accessed without moving the head stack. When it comes to coordinates,
+track and cylinder are interchangeable terms.
+</para>
+<para>
+The reason you'll find drive geometry coordinates used in partitioning
+schemes and file systems is twofold: First, older disk interfaces
+required cylinder-head-sector coordinates because the (simple) drive
+electronics couldn't handle logical sector numbers. Second, putting
+data together in one cylinder speeds up access. As hard drives grew
+more complex and more intelligent, both reasons vanished.
+</para>
+</section>
 
 <section>
 <title>Partitioning</title>
@@ -200,7 +218,6 @@ and sometimes(?) on removable media like Zip disks.
 
 
 </section><!-- Amiga -->
-
 
 
 
@@ -366,12 +383,21 @@ More information on PC-style partition tables can be found at
 <para>
 [to be written]
 </para>
+<para>
+Information on ext2 can be found at
+<ulink url="http://e2fsprogs.sourceforge.net/" />,
+the page of the ext2 tools.
+</para>
 </section>
 
 <section>
 <title>ReiserFS</title>
 <para>
 [to be written]
+</para>
+<para>
+Information on ReiserFS can be found at
+<ulink url="http://www.namesys.com/" />.
 </para>
 </section>
 
@@ -387,6 +413,10 @@ More information on PC-style partition tables can be found at
 <para>
 [to be written]
 </para>
+<para>
+Information on romfs can be found at
+<ulink url="http://romfs.sourceforge.net/" />.
+</para>
 </section>
 
 <section>
@@ -394,12 +424,20 @@ More information on PC-style partition tables can be found at
 <para>
 [to be written]
 </para>
+<para>
+Information on cramfs can be found at
+<ulink url="http://sourceforge.net/projects/cramfs/" />.
+</para>
 </section>
 
 <section>
 <title>squashfs</title>
 <para>
 [to be written]
+</para>
+<para>
+Information on squashfs can be found at
+<ulink url="http://squashfs.sourceforge.net/" />.
 </para>
 </section>
 
@@ -456,6 +494,10 @@ BIOSes. <application>disktype</application> tries to avoid it, but it
 may still misidentify one of these as a FAT file system. Hopefully the
 "hints score" will help you identify such situations.
 </para>
+<para>
+Official information on the FAT family can be found at
+<ulink url="http://www.microsoft.com/hwdev/hardware/fatgendown.asp" />.
+</para>
 </section>
 
 <section>
@@ -474,7 +516,10 @@ cared to change over the years. <application>disktype</application>
 also checks some other paramaters in the boot sector, but those are
 shared with the FAT file system family...
 </para>
-<!-- link to Linux NTFS docs -->
+<para>
+Some information on NTFS is available from the Linux-NTFS project at
+<ulink url="http://linux-ntfs.sourceforge.net/" />.
+</para>
 </section>
 
 </section><!-- Microsoft -->
@@ -499,6 +544,11 @@ shared with the FAT file system family...
 <title>JFS</title>
 <para>
 [to be written]
+</para>
+<para>
+Information on JFS (at least the open-sourced Linux implementation)
+can be found at
+<ulink url="http://oss.software.ibm.com/jfs/" />.
 </para>
 </section>
 
@@ -525,12 +575,21 @@ shared with the FAT file system family...
 <para>
 [to be written]
 </para>
+<para>
+Information on System V file systems can be found at
+<ulink url="http://www.knm.org.pl/prezes/sysv.html" />, the page for
+the Linux driver.
+</para>
 </section>
 
 <section>
 <title>XFS</title>
 <para>
 [to be written]
+</para>
+<para>
+Information on the Linux port of XFS can be found at
+<ulink url="http://oss.sgi.com/projects/xfs/" />.
 </para>
 </section>
 
@@ -670,4 +729,45 @@ shared with the FAT file system family...
 
 
 </chapter>
+
+
+
+<chapter>
+<title>Other Sources of Information</title>
+
+<para>
+The Operating System Resource Center at
+<ulink url="http://www.nondot.org/sabre/os/articles/" />
+has a wealth of information on various operating system techniques,
+including file systems.
+</para>
+<para>
+Another important source of information is the Linux kernel source,
+available from
+<ulink url="http://www.kernel.org/" />.
+File system drivers are in the <filename>fs</filename> directory, but
+many include files defining structures are actually in
+<filename>include/linux</filename>. The RAID and LVM code lives in
+<filename>drivers/md</filename> and
+<filename>include/linux/raid</filename>.
+All code for reading various partition maps is in
+<filename>fs/partitions</filename>.
+The Linux kernel even contains some format detection code in
+<filename>init/do_mounts.c</filename>, used in mounting an initial
+ramdisk (initrd).
+</para>
+
+<para>
+Other Unix kernels are also available in source code, like Darwin (the
+BSD-based kernel used in Mac OS&nbsp;X) at
+<ulink url="http://developer.apple.com/darwin/" />
+and the free BSD derivatives
+FreeBSD (<ulink url="http://www.freebsd.org/" />),
+OpenBSD (<ulink url="http://www.openbsd.org/" />), and
+NetBSD  (<ulink url="http://www.netbsd.org/" />).
+</para>
+
+</chapter>
+
+
 </book>
