@@ -27,6 +27,7 @@
 
 #include "global.h"
 
+#define USE_BINARY_SEARCH 0
 #define DEBUG_SIZE 0
 
 #ifdef USE_IOCTL_LINUX
@@ -59,7 +60,9 @@ typedef struct file_source {
 static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf);
 static void close_file(SOURCE *s);
 
+#if USE_BINARY_SEARCH
 static int check_position(int fd, u8 pos);
+#endif
 
 /*
  * initialize the file source
@@ -171,6 +174,7 @@ SOURCE *init_file_source(int fd, int filekind)
   }
 #endif
 
+#if USE_BINARY_SEARCH
   /*
    * binary search:
    * Works on anything that can seek, but is quite expensive.
@@ -207,6 +211,7 @@ SOURCE *init_file_source(int fd, int filekind)
     printf("Size: Binary search reports %llu\n", fs->c.size);
 #endif
   }
+#endif
 
   return (SOURCE *)fs;
 }
@@ -269,6 +274,7 @@ static void close_file(SOURCE *s)
  * check if the given position is inside the file's size
  */
 
+#if USE_BINARY_SEARCH
 static int check_position(int fd, u8 pos)
 {
   char buf[2];
@@ -283,5 +289,6 @@ static int check_position(int fd, u8 pos)
     return 0;
   return 1;
 }
+#endif
 
 /* EOF */
