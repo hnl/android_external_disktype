@@ -258,7 +258,7 @@ static char * get_name_for_type(int type)
 void detect_bsd_disklabel(SECTION *section, int level)
 {
   unsigned char *buf;
-  int i, off, partcount, types[22], min_offset_valid;
+  int i, off, partcount, types[22], min_offset_valid, did_recurse;
   u4 starts[22], sizes[22];
   u4 sectsize, nsectors, ntracks, ncylinders, secpercyl, secperunit;
   u8 offset, min_offset, base_offset;
@@ -321,11 +321,16 @@ void detect_bsd_disklabel(SECTION *section, int level)
     /* are we analyzing the slice alone? */
     print_line(level + 1, "Adjusting offsets for disklabel in a DOS partition at sector %llu", min_offset >> 9);
     base_offset = min_offset;
+  } else if (min_offset == 0) {
+    /* assume relative offsets after all */
+    base_offset = 0;
   } else {
     print_line(level + 1, "Warning: Unable to adjust offsets, your mileage may vary");
     base_offset = section->pos;
   }
 
+  /* loop over partitions: print and analyze */
+  did_recurse = 0;
   for (i = 0; i < partcount; i++) {
     pn = 'a' + i;
     if (types[i] == 0 && i != 2) {
@@ -353,6 +358,7 @@ void detect_bsd_disklabel(SECTION *section, int level)
       analyze_recursive(section, level + 1,
 			offset - base_offset, (u8)sizes[i] * 512,
 			FLAG_IN_DISKLABEL);
+      did_recurse = 1;
     } else {
       /* recurse for content detection */
       analyze_recursive(section, level + 1,
@@ -361,9 +367,10 @@ void detect_bsd_disklabel(SECTION *section, int level)
     }
   }
 
-  stop_detect();  /* don't run other detectors; we probably already
-		     did that for the first partition, which overlaps
-		     with the disklabel itself. */
+  if (did_recurse)
+    stop_detect();  /* don't run other detectors; we probably already
+		       did that for the first partition, which overlaps
+		       with the disklabel itself. */
 }
 
 /*
