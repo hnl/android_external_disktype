@@ -30,6 +30,7 @@
 #define DEBUG_SIZE 0
 
 #ifdef USE_IOCTL_LINUX
+#include <sys/ioctl.h>
 #include <linux/fs.h>
 #endif
 
@@ -95,10 +96,6 @@ SOURCE *init_file_source(int fd, int filekind)
 #endif
     if (result > 0)
       fs->c.size = result;
-    /*
-    else if (result < 0)
-      errore("Can't determine file size");
-    */
   }
 
 #ifdef USE_IOCTL_LINUX
@@ -106,15 +103,28 @@ SOURCE *init_file_source(int fd, int filekind)
    * ioctl, Linux style:
    * Works on certain devices.
    */
+#ifdef BLKGETSIZE64
+#define u64 __u64   /* workaround for broken header file */
+  if (fs->c.size == 0 && filekind != 0) {
+    u8 devsize;
+    if (ioctl(fd, BLKGETSIZE64, (void *)&devsize) >= 0) {
+      fs->c.size = devsize;
+#if DEBUG_SIZE
+      printf("Size: Linux 64-bit ioctl reports %llu\n", fs->c.size);
+#endif
+    }
+  }
+#undef u64
+#endif
+
   if (fs->c.size == 0 && filekind != 0) {
     u4 blockcount;
     if (ioctl(fd, BLKGETSIZE, (void *)&blockcount) >= 0) {
       fs->c.size = (u8)blockcount * 512;
 #if DEBUG_SIZE
-      printf("Size: Linux ioctl reports %llu (%lu blocks)\n",
+      printf("Size: Linux 32-bit ioctl reports %llu (%lu blocks)\n",
 	     fs->c.size, blockcount);
 #endif
-      }
     }
   }
 #endif
