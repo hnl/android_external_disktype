@@ -1,5 +1,9 @@
-<?xml version="1.0"?>
-<!DOCTYPE book SYSTEM "docbookx.dtd">
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd"
+[
+  <!ENTITY disktype "<command>disktype</command>">
+]>
 
 
 <book>
@@ -136,7 +140,28 @@ other operating systems to co-exist on the disk.
 <!-- TODO: something on RAID and logical volume managers -->
 </section>
 
+<section>
+<title>Block Allocation</title>
+<para>
+[to be written]
+</para>
+</section>
 
+<section>
+<title>Inodes and Links</title>
+<para>
+[to be written]
+</para>
+</section>
+
+<!--
+<section>
+<title>[title]</title>
+<para>
+[to be written]
+</para>
+</section>
+-->
 
 </chapter>
 
@@ -423,6 +448,7 @@ nowadays. There was a predecessor called just extended file system,
 but support for it has long been eliminated from the Linux kernel.
 ext3 is a backwards-compatible extension that adds meta-data
 journalling.
+<!-- also available on the *BSDs (to check) -->
 </para>
 <para>
 ext2 is a fairly plain Unix file system, using an allocation bitmap
@@ -443,6 +469,8 @@ the page of the ext2 tools.
 <title>ReiserFS</title>
 <para>
 [to be written]
+<!-- written for efficiency, especially with large number of files
+per directories and large numbers of small files. Journalling. -->
 </para>
 <para>
 Information on ReiserFS can be found at
@@ -541,7 +569,12 @@ and are little-endian.
 <para>
 This family of formats has a long history. They were introduced by
 MS-DOS and are still supported and used today in all versions of MS
-Windows. FAT stands for File Allocation Table, a central structure in
+Windows. The format also managed to establish itself as the common
+denominator for disk interchange, and as a result is supported by
+virtually every operating system on the planet.
+</para>
+<para>
+FAT stands for File Allocation Table, a central structure in
 the file system. It acts as an allocation bitmap, but also stores
 which clusters belong to a certain file using linked lists. As the
 names indicate, there are variants with entry sizes of 12, 16 and 32
@@ -578,9 +611,9 @@ Official information on the FAT family can be found at
 <title>NTFS</title>
 <para>
 NTFS is the file system used by Microsoft in the Windows NT range of
-operating systems. It is much better designed than FAT was, and
-supports features like extended attributes and n-fork
-files.
+operating systems (Windows NT, Windows 2000, Windows XP). It is much
+better designed than FAT was, and supports features like extended
+attributes and n-fork files.
 </para>
 <para>
 &disktype; uses a signature in the "system
@@ -618,6 +651,10 @@ Some information on NTFS is available from the Linux-NTFS project at
 <title>JFS</title>
 <para>
 [to be written]
+<!--
+IBM file system, used in OS/2 and AIX, now ported to Linux. Does
+journaling.
+-->
 </para>
 <para>
 Information on JFS (at least the open-sourced Linux implementation)
@@ -648,6 +685,9 @@ can be found at
 <title>System V FS</title>
 <para>
 [to be written]
+<!--
+File system used in variations in SysV-derived Unices.
+-->
 </para>
 <para>
 Information on System V file systems can be found at
@@ -660,6 +700,10 @@ the Linux driver.
 <title>XFS</title>
 <para>
 [to be written]
+<!--
+SGI file system, ported to Linux. Does journaling.
+Written for performance, even supports real-time operations.
+-->
 </para>
 <para>
 Information on the Linux port of XFS can be found at
