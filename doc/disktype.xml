@@ -478,7 +478,9 @@ DOS-based operating systems.
 </para>
 <para>
 More information on PC-style partition tables can be found at
-<ulink url="http://www.win.tue.nl/~aeb/partitions/partition_tables-2.html" />.
+<ulink url="http://www.win.tue.nl/~aeb/partitions/partition_tables.html" />
+and
+<ulink url="http://www.win.tue.nl/~aeb/partitions/partition_types.html" />.
 </para>
 </section>
 
@@ -557,7 +559,20 @@ Information on ReiserFS can be found at
 <section>
 <title>Minix</title>
 <para>
-[to be written]
+As the name suggests, the Minix format didn't originate on Linux, but on
+Minix, the PC Unix system after which Linux was modelled in its early
+days. The format is quite simple and compact, and was the preferred
+format for boot and install floppies for some time. Today, it has
+been superceded by ext2, and support for it will likely be removed
+in the next stable Linux kernel series.
+</para>
+<para>
+Minix puts the superblock 1K into the device. There are two versions of
+the volume structures (most notably the inodes), and two maximum
+lengths for file names (14 or 30 chars). These parameters can be combined,
+yielding four actual formats, each with its own magic. &disktype;
+assumes that Minix is always little-endian, but I wasn't able
+to really confirm this yet.
 </para>
 </section>
 
@@ -618,7 +633,27 @@ Information on squashfs can be found at
 <section>
 <title>Linux Swap</title>
 <para>
-[to be written]
+Linux swap partitions must be formatted before use, although the format
+is quite simple. It has just two purposes: Marking the partition as okay
+for swapping with a signature, and keeping a list of bad blocks. Both
+are kept in the very first block. The block size is the architecture's
+page size and can be 4K or 8K.
+</para>
+<para>
+There are two formats. The old one uses a bitmap in the first block to
+mark bad sectors, which limits it to around 128 MB in 4K-page architectures.
+Luckily, bad blocks are rare nowadays -- actually, most people won't
+touch a disk with even a single bad sector with a ten-feet pole.
+The new format uses a list of block numbers instead of a bitmap, thus lifting
+the size restriction.
+</para>
+<para>
+Note that the two formats are known under various names. Sometimes they are
+called version 0 and 1, sometimes version 1 and 2. Since the new format
+uses "SWAPSPACE2" as its signature, &disktype; uses 1 and 2. The page size
+is determined from the position of the signature; it's at the end of the
+first page-sized block. The endianness can only be determined for the
+new (version 2) format, using the sub-version number field.
 </para>
 </section>
 
@@ -713,24 +748,36 @@ Some information on NTFS is available from the Linux-NTFS project at
 <title>IBM</title>
 
 <para>
-[to be written]
+This section lists formats that originated at IBM.
 </para>
 
 <section>
 <title>HPFS</title>
 <para>
-[to be written]
+HPFS, the High Performance File System, was introduced in OS/2 as an
+alternative to FAT. It's design is quite clean, and has an eye on
+performance. There is also support for extended attributes, apparently
+used by OS/2's graphical shell, the Workspace Manager.
+</para>
+<para>
+HPFS preserves the DOS boot sector in sector 0 and puts its own superblocks
+into sectors 16 and 17 (that is, 8K into the device). The space in between
+is used for boot code. All structures in HPFS are clearly marked with
+magic numbers.
 </para>
 </section>
 
 <section>
 <title>JFS</title>
 <para>
-[to be written]
-<!--
-IBM file system, used in OS/2 and AIX, now ported to Linux. Does
-journaling.
--->
+The JFS file system was originally created for AIX, IBM's flavor of Unix.
+It was later made more portable and release with OS/2 Warp.
+IBM also ported it to Linux and released it under the GPL.
+The main feature of JFS is meta-data journaling.
+</para>
+<para>
+JFS puts its superblock 32K into the device. It uses extents, inodes,
+and B+ trees.
 </para>
 <para>
 Information on JFS (at least the open-sourced Linux implementation)
@@ -747,23 +794,33 @@ can be found at
 <title>Commercial Unix Flavors</title>
 
 <para>
-[to be written]
+This section is something of a catch-all. Some file systems that originated
+on commercial Unix flavors were already described (IBM's JFS, for example).
+Then, there are the "generic" formats that originated from System V and BSD,
+and were adopted and adapted by commercial vendors.
 </para>
 
 <section>
 <title>UFS</title>
 <para>
-[to be written]
+UFS originated from BSD, and is used in various Unix flavors
+including Sun Solaris and NextStep / Mac OS&nbsp;X.
+</para>
+<para>
+The different variations use block sizes of 512, 1024, or 2048 bytes,
+the latter one intended for CD media. The superblock is located
+some way into the device; &disktype; only checks at 8K at this time.
+There are four different magic numbers for different revisions of the
+structures. The file system can be little-endian or big-endian,
+depending on the architecture of the vendor.
 </para>
 </section>
 
 <section>
 <title>System V FS</title>
 <para>
-[to be written]
-<!--
-File system used in variations in SysV-derived Unices.
--->
+The System V file system is used in various Unix flavors based on the
+System V strain. It is not yet supported by &disktype;.
 </para>
 <para>
 Information on System V file systems can be found at
@@ -775,11 +832,13 @@ the Linux driver.
 <section>
 <title>XFS</title>
 <para>
-[to be written]
-<!--
-SGI file system, ported to Linux. Does journaling.
-Written for performance, even supports real-time operations.
--->
+XFS is SGI's high-performance file system, originally developed for IRIX.
+Like JFS, it has been open-sourced and ported to Linux.
+XFS does meta-data journalling, and even has optional real-time features.
+</para>
+<para>
+Unlike most Unix file systems, XFS puts the superblock at the very
+beginning of the device. All data is stored in big-endian byte order.
 </para>
 <para>
 Information on the Linux port of XFS can be found at
@@ -848,7 +907,10 @@ Information on the Linux port of XFS can be found at
 <title>Boot Codes</title>
 
 <para>
-[to be written]
+&disktype; can identify a range of Linux boot loaders using clear text
+signatures in the boot sector. This currently includes LILO, GRUB,
+SYSLINUX, and ISOLINUX. The boot loader built into each i386 Linux
+kernel is also recognized.
 </para>
 
 </section><!-- Boot Codes -->
