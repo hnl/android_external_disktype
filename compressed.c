@@ -32,9 +32,12 @@
 
 #define DEBUG 0
 
-#ifndef FD_ZERO
+#if !defined(FD_ZERO)
 #define DECOMPRESS 0
 #warning Transparent decompression disabled, select() macros not defined
+#elif defined(__amigaos__) && !defined(__ixemul__)
+#define DECOMPRESS 0
+#warning Transparent decompression disabled, ixemul not available
 #else
 #define DECOMPRESS 1
 #endif

@@ -128,8 +128,8 @@ void detect_amiga_fs(SECTION *section, int level)
   if (get_buffer(section, 0, 512, (void **)&buf) < 512)
     return;
 
-  if (memcmp(buf, "DOS", 3) == 0){
-    flags = buf[4];
+  if (memcmp(buf, "DOS", 3) == 0) {
+    flags = buf[3];
     if (flags & 1)
       strcpy(s, "Amiga FFS file system");
     else

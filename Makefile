@@ -31,6 +31,11 @@ ifeq ($(NOSYS),)
     CPPFLAGS += -DUSE_MACOS_TYPE -DUSE_IOCTL_DARWIN
     LIBS     += -framework CoreServices
   endif
+  ifeq ($(system),AmigaOS)
+    CC       += -noixemul
+    CFLAGS   += -m68020-60 -msmall-code
+    LDFLAGS  += -m68020-60 -msmall-code   # not sure if this is required
+  endif
 endif
 
 # real making
