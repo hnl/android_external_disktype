@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.21 2004/04/05 06:07:31 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.22 2004/12/18 10:25:36 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -82,6 +82,15 @@ Added file systems: 3DO CD-ROM file system, Veritas VxFS.
 Added other structures: Sega Dreamcast signature.
 Improved file systems: HFS Plus.
 Improved other structures: -
+
+
+Version 8 is still under development. It features the following
+improvements:
+
+Added file systems: Reiser4.
+Added other structures: -
+Improved file systems: -
+Improved other structures: Linux LVM1 physical volumes.
 
 
 EOF

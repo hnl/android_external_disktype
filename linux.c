@@ -2,7 +2,7 @@
  * linux.c
  * Detection of Linux file systems and boot codes
  *
- * Copyright (c) 2003 Christoph Pfisterer
+ * Copyright (c) 2003-04 Christoph Pfisterer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -131,6 +131,61 @@ void detect_reiser(SECTION *section, int level)
     print_line(level + 1, "Volume size %s", s);
 
     /* TODO: print hash code */
+  }
+}
+
+/*
+ * Reiser4 file system
+ */
+
+void detect_reiser4(SECTION *section, int level)
+{
+  unsigned char *buf;
+  char s[256];
+  int layout_id;
+  char layout_name[64];
+  u4 blocksize;
+  u8 blockcount;
+
+  if (get_buffer(section, 16 * 4096, 1024, (void **)&buf) < 1024)
+    return;
+
+  /* check signature */
+  if (memcmp(buf, "ReIsEr4", 7) != 0)
+    return;
+
+  /* get data from master superblock */
+  layout_id = get_le_short(buf + 16);
+  blocksize = get_le_short(buf + 18);
+  if (layout_id == 0)
+    strcpy(layout_name, "4.0 layout");
+  else
+    sprintf(layout_name, "Unknown layout with ID %d", layout_id);
+
+  format_size(s, blocksize);
+  print_line(level, "Reiser4 file system (%s, block size %s)",
+	     layout_name, s);
+
+  /* get label and UUID */
+  get_string(buf + 36, 16, s);
+  if (s[0])
+    print_line(level + 1, "Volume name \"%s\"", s);
+
+  format_uuid(buf + 20, s);
+  print_line(level + 1, "UUID %s", s);
+
+  if (layout_id == 0) {
+    /* read 4.0 superblock */
+    if (get_buffer(section, 17 * 4096, 1024, (void **)&buf) < 1024)
+      return;
+    if (memcmp(buf + 52, "ReIsEr40FoRmAt", 14) != 0) {
+      print_line(level + 1, "Superblock for 4.0 format missing");
+      return;
+    }
+
+    blockcount = get_le_quad(buf);
+    format_blocky_size(s, blockcount, blocksize, "blocks", NULL);
+    print_line(level + 1, "Volume size %s", s);
   }
 }
 

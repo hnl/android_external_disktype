@@ -59,6 +59,7 @@ void detect_udf(SECTION *section, int level);
 /* in linux.c */
 void detect_ext23(SECTION *section, int level);
 void detect_reiser(SECTION *section, int level);
+void detect_reiser4(SECTION *section, int level);
 void detect_linux_raid(SECTION *section, int level);
 void detect_linux_lvm(SECTION *section, int level);
 void detect_linux_swap(SECTION *section, int level);
@@ -126,6 +127,7 @@ DETECTOR detectors[] = {
   detect_iso,
   detect_ext23,
   detect_reiser,
+  detect_reiser4,
   detect_linux_raid,
   detect_linux_lvm,
   detect_linux_swap,
