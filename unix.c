@@ -219,7 +219,7 @@ void detect_sysv(SECTION *section, int level)
  * BSD disklabel
  */
 
-static char * type_names[] = {
+static char * bsdtype_names[] = {
   "Unused",
   "swap",
   "Sixth Edition",
@@ -239,10 +239,10 @@ static char * type_names[] = {
   "Digital Unix AdvFS",
 };
 
-static char * get_name_for_type(int type)
+static char * get_name_for_bsdtype(int type)
 {
   if (type >= 0 && type <= 16)
-    return type_names[type];
+    return bsdtype_names[type];
   return "Unknown";
 }
 
@@ -333,7 +333,7 @@ void detect_bsd_disklabel(SECTION *section, int level)
 	       pn, s);
 
     print_line(level + 1, "Type %d (%s)",
-	       types[i], get_name_for_type(types[i]));
+	       types[i], get_name_for_bsdtype(types[i]));
 
     if (types[i] == 0 || sizes[i] == 0)
       continue;
@@ -395,6 +395,27 @@ void detect_bsd_loader(SECTION *section, int level)
  * Solaris x86 vtoc
  */
 
+static char * vtoctype_names[] = {
+  "Unused",
+  "Boot",
+  "Root",
+  "Swap",
+  "Usr",
+  "Overlap",
+  "Stand",
+  "Var",
+  "Home",
+  "Alternate sector",
+  "Cache"
+};
+
+static char * get_name_for_vtoctype(int type)
+{
+  if (type >= 0 && type <= 10)
+    return vtoctype_names[type];
+  return "Unknown";
+}
+
 void detect_solaris_vtoc(SECTION *section, int level)
 {
   unsigned char *buf;
@@ -453,8 +474,8 @@ void detect_solaris_vtoc(SECTION *section, int level)
     print_line(level, "Partition %d: %s",
 	       i, s);
 
-    print_line(level + 1, "Type %d",
-	       types[i]);
+    print_line(level + 1, "Type %d (%s)",
+	       types[i], get_name_for_vtoctype(types[i]));
 
     offset = (u8)starts[i] * 512;
     if (offset == 0) {
