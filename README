@@ -1,0 +1,63 @@
+ disktype 1
+============
+
+The purpose of disktype is to detect the content format of a disk or
+disk image. It knows about common file systems, partition tables, and
+boot codes.
+
+The program is written in C and is designed to compile on any modern
+Unix flavour. It requires no special libraries, except on Mac OS X,
+where it uses the CoreServices framework to get the Mac OS type and
+creator code of a file.
+
+
+ Installation
+--------------
+
+GNU make is required to build disktype. The Makefile is set up to use
+GCC, but can be edited if required. Alternatively, the standard
+variables CC, CPPFLAGS, CFLAGS, LDFLAGS, and LIBS can be changed from
+the make command line.
+
+Running make results in the binary `disktype'. Copy it to a `bin'
+directory of your choice, optionally stripping it on the way. That's
+all.
+
+
+ Usage
+-------
+
+The `disktype' program can be run with any number of regular files or
+block devices as arguments. They will be analyzed in the order
+given, and the results printed to standard output. There are no
+switches in this version. Note that running disktype on block devices
+like your hard disk will likely require root rights.
+
+
+ Recognized Formats
+--------------------
+
+The following formats are recognized by this version of disktype.
+
+File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
+  ISO9660.
+
+Partition maps: DOS/PC style, Apple.
+
+Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel.
+
+Miscellaneous: Debian split floppy header, gzip header, Linux swap.
+
+
+ Future Plans
+--------------
+
+To fulfill its purpose, disktype needs to know about as much formats
+as possible. If you know a file system not yet included and can
+provide me with (pointers to) format information, please contact me at
+<chrisp@users.sourceforge.net>. I'm also looking for information on
+disk image formats (e.g. used by backup apps or CD mastering
+software).
+
+
+EOF
