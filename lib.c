@@ -313,6 +313,14 @@ const char * get_ve_name(int endianness)
  * more data access
  */
 
+void get_string(void *from, int len, char *to)
+{
+  if (len > 255)
+    len = 255;
+  memcpy(to, from, len);
+  to[len] = 0;
+}
+
 void get_pstring(void *from, char *to)
 {
   int len = *(unsigned char *)from;

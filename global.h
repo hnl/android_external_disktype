@@ -132,6 +132,7 @@ const char * get_ve_name(int endianness);
 
 /* more data access */
 
+void get_string(void *from, int len, char *to);
 void get_pstring(void *from, char *to);
 
 int find_memory(void *haystack, int haystack_len,
