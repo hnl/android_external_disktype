@@ -26,6 +26,8 @@
  */
 
 #include "global.h"
+
+#include <signal.h>
 #include <sys/wait.h>
 
 #define DEBUG 0
