@@ -305,6 +305,11 @@ void detect_linux_lvm(SECTION *section, int level)
   s[128] = 0;
   print_line(level + 1, "Volume group name \"%s\"", s);
 
+  /* "UUID" of this physical volume */
+  memcpy(s, buf + 0x2c, 128);
+  s[128] = 0;
+  print_line(level + 1, "PV \"UUID\" %s", s);
+
   /* volume size */
   pe_size = get_le_long(buf + 452);
   pe_count = get_le_long(buf + 456);
