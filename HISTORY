@@ -1,3 +1,5 @@
+$Id: HISTORY,v 1.3 2003/03/14 09:07:40 chrisp Exp $   -*- text -*-
+
  disktype History
 ==================
 
@@ -24,7 +26,7 @@ Improved other structures: Linux swap.
 
 Version 3 is still under development. It features an extensive
 re-write of the buffering layer, in conjunction with transparent
-decompression of gzip- or compress-compressed data. In other news:
+decompression of data compressed with gzip, compress, or bzip2. In other news:
 
 Added file systems: UFS (some variations).
 Added other structures: tar archives, cpio archives, bar archives,

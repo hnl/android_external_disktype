@@ -1,3 +1,5 @@
+$Id: README,v 1.4 2003/03/14 09:07:40 chrisp Exp $   -*- text -*-
+
  disktype 3
 ============
 
@@ -47,14 +49,15 @@ Partition maps: DOS/PC style, Apple.
 
 Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel.
 
-Archive formats: gzip, compress, tar, cpio, bar, dump/restore.
+Archive formats: gzip, compress, bzip2, tar, cpio, bar, dump/restore.
 
 Other structures: Debian split floppy header, Linux swap, Linux RAID
   physical disks, Linux LVM physical volumes.
 
-Compressed files (gzip and compress formats) will also have their
-contents analyzed using transparent decompression. This requires that
-the 'gzip' command is installed on the system.
+Compressed files (gzip, compress, bzip2 formats) will also have their
+contents analyzed using transparent decompression. The appropriate
+compression program must be installed on the system, i.e. 'gzip' for
+the gzip and compress formats, 'bzip2' for the bzip2 format.
 
 Raw-mode CD images (e.g. the .bin file of a .bin/.cue pair) are
 recognized by size (multiple of 2352 bytes) and translated
