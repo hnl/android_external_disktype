@@ -71,8 +71,7 @@ void detect_atari_partmap(SECTION *section, int level)
   used = 0;
   for (off = 0x1c6, i = 0; i < 4; i++, off += 12) {
     flags[i] = buf[off];
-    memcpy(types[i], buf + off + 1, 3);
-    types[i][3] = 0;
+    get_string(buf + off + 1, 3, types[i]);
     starts[i] = get_be_long(buf + off + 4);
     sizes[i] = get_be_long(buf + off + 8);
     if ((flags[i] & 1) && starts[i] != 0 && sizes[i] != 0)
@@ -88,10 +87,8 @@ void detect_atari_partmap(SECTION *section, int level)
     size = sizes[i];
     flag = flags[i];
     type = types[i];
-    if ((flag & 1) == 0) {
-      print_line(level, "Partition %d: unused", i+1);
+    if ((flag & 1) == 0)
       continue;
-    }
 
     format_size(s, size, 512);
     print_line(level, "Partition %d: %s (%lu sectors starting at %lu%s)",
@@ -130,8 +127,7 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
     /* get data */
     for (off = 0x1c6, i = 0; i < 4; i++, off += 12) {
       flags[i] = buf[off];
-      memcpy(types[i], buf + off + 1, 3);
-      types[i][3] = 0;
+      get_string(buf + off + 1, 3, types[i]);
       starts[i] = get_be_long(buf + off + 4);
       sizes[i] = get_be_long(buf + off + 8);
     }

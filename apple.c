@@ -84,8 +84,7 @@ void detect_apple_partmap(SECTION *section, int level)
 	       i, s, size, start);
 
     /* get type */
-    memcpy(s, buf + 48, 32);
-    s[32] = 0;
+    get_string(buf + 48, 32, s);
     print_line(level+1, "Type \"%s\"", s);
 
     /* recurse for content detection */

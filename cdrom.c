@@ -56,8 +56,7 @@ void detect_iso(SECTION *section, int level)
   print_line(level, "ISO9660 file system");
 
   /* read Volume ID */
-  memcpy(s, buf + 40, 32);
-  s[32] = 0;
+  get_string(buf + 40, 32, s);
   for (i = 31; i >= 0 && s[i] == 32; i--)
     s[i] = 0;
   print_line(level+1, "Volume name \"%s\"", s);

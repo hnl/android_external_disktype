@@ -55,8 +55,7 @@ void detect_bfs(SECTION *section, int level)
 		   get_ve_name(en));
 
 	/* get label */
-	memcpy(s, buf, 32);
-	s[32] = 0;
+	get_string(buf, 32, s);
 	if (s[0])
 	  print_line(level + 1, "Volume name \"%s\"", s);
 

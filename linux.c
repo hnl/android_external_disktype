@@ -49,16 +49,14 @@ void detect_ext23(SECTION *section, int level)
     else
       print_line(level, "Ext2 file system");
 
-    memcpy(s, buf + 120, 16);
-    s[16] = 0;
+    get_string(buf + 120, 16, s);
     if (s[0])
       print_line(level + 1, "Volume name \"%s\"", s);
 
     format_uuid(buf + 104, s);
     print_line(level + 1, "UUID %s", s);
 
-    memcpy(s, buf + 136, 64);
-    s[64] = 0;
+    get_string(buf + 136, 64, s);
     if (s[0])
       print_line(level + 1, "Last mounted at \"%s\"", s);
 
@@ -122,8 +120,7 @@ void detect_reiser(SECTION *section, int level)
     */
 
     /* get label */
-    memcpy(s, buf + 100, 16);
-    s[16] = 0;
+    get_string(buf + 100, 16, s);
     if (s[0])
       print_line(level + 1, "Volume name \"%s\"", s);
 
@@ -230,13 +227,11 @@ void detect_linux_lvm(SECTION *section, int level)
 	     (int)get_le_short(buf + 2));
 
   /* volume group name */
-  memcpy(s, buf + 172, 128);
-  s[128] = 0;
+  get_string(buf + 172, 128, s);
   print_line(level + 1, "Volume group name \"%s\"", s);
 
   /* "UUID" of this physical volume */
-  memcpy(s, buf + 0x2c, 128);
-  s[128] = 0;
+  get_string(buf + 0x2c, 128, s);
   print_line(level + 1, "PV \"UUID\" %s", s);
 
   /* volume size */
@@ -372,8 +367,7 @@ void detect_linux_misc(SECTION *section, int level)
 	print_line(level, "Linux cramfs, starts sector %d, %s",
 		   off >> 9, get_ve_name(en));
 
-	memcpy(s, buf + off + 48, 16);
-	s[16] = 0;
+	get_string(buf + off + 48, 16, s);
 	print_line(level + 1, "Volume name \"%s\"", s);
 
 	size = get_ve_long(en, buf + off + 4);
