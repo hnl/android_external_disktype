@@ -44,7 +44,11 @@ typedef struct compressed_source {
  * helper functions
  */
 
-static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size);
+static void handle_compressed(SECTION *section, int level,
+			      int off, const char *program);
+
+static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size,
+				      const char *program);
 static u8 read_compressed(SOURCE *s, u8 pos, u8 len, void *buf);
 static void close_compressed(SOURCE *s);
 
@@ -54,56 +58,83 @@ static void close_compressed(SOURCE *s);
 
 void detect_compressed(SECTION *section, int level)
 {
-  int i, fill;
+  int fill, off, sector;
   unsigned char *buf;
 
-  fill = get_buffer(section, 0, 8192, (void **)&buf);
+  fill = get_buffer(section, 0, 4096, (void **)&buf);
 
-  /* look for gzip signatures at sector beginnings */
-  for (i = 0; i < 16 && i < (fill >> 9); i++) {
-    int off = i << 9;
-    if (buf[off] == 037 && (buf[off+1] == 0213 || buf[off+1] == 0236 ||
-			    buf[off+1] == 0235)) {
-      SOURCE *s;
-      SECTION rs;
-      u8 size;
-      char *format = "gzip";
-      if (buf[off+1] == 0235)
-	format = "compress";
+  /* look for signatures at sector beginnings */
+  for (off = 0; off + 512 <= fill; off += 512) {
+    sector = off >> 9;
 
-      /* tell the user */
-      if (i > 0)
-	print_line(level, "%s-compressed data at sector %d", format, i);
+    /* compress */
+    if (buf[off] == 037 && buf[off+1] == 0235) {
+      if (sector > 0)
+	print_line(level, "compress-compressed data at sector %d", sector);
       else
-	print_line(level, "%s-compressed data", format);
+	print_line(level, "compress-compressed data");
 
-      /* create decompression data source */
-      size = section->size;
-      if (size > 0)
-	size -= off;
-      s = init_compressed_source(section->source,
-				 section->pos + off, size);
+      handle_compressed(section, level, off, "gzip");
 
-      /* analyze it */
-      rs.source = s;
-      rs.pos = 0;
-      rs.size = s->size;
-      detect(&rs, level+1);
+      break;
+    }
 
-      /* destroy wrapped source */
-      close_source(s);
+    /* gzip */
+    if (buf[off] == 037 && (buf[off+1] == 0213 || buf[off+1] == 0236)) {
+      if (sector > 0)
+	print_line(level, "gzip-compressed data at sector %d", sector);
+      else
+	print_line(level, "gzip-compressed data");
 
-      /* stop looking for further signatures */
+      handle_compressed(section, level, off, "gzip");
+
+      break;
+    }
+
+    /* bzip2 */
+    if (memcmp(buf + off, "BZh", 3) == 0) {
+      if (sector > 0)
+	print_line(level, "bzip2-compressed data at sector %d", sector);
+      else
+	print_line(level, "bzip2-compressed data");
+
+      handle_compressed(section, level, off, "bzip2");
+
       break;
     }
   }
+}
+
+static void handle_compressed(SECTION *section, int level,
+			      int off, const char *program)
+{
+  SOURCE *s;
+  SECTION rs;
+  u8 size;
+
+  /* create decompression data source */
+  size = section->size;
+  if (size > 0)
+    size -= off;
+  s = init_compressed_source(section->source,
+			     section->pos + off, size, program);
+
+  /* analyze it */
+  rs.source = s;
+  rs.pos = 0;
+  rs.size = s->size;
+  detect(&rs, level+1);
+
+  /* destroy wrapped source */
+  close_source(s);
 }
 
 /*
  * initialize the decompression
  */
 
-static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size)
+static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size,
+				      const char *program)
 {
   COMPRESSED_SOURCE *cs;
   int write_pipe[2], read_pipe[2], flags;
@@ -147,8 +178,8 @@ static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size)
     if (read_pipe[1] > 2)
       close(read_pipe[1]);
 
-    /* execute gzip */
-    execlp("gzip", "gzip", "-dc", NULL);
+    /* execute decompressor (gzip or bzip2) */
+    execlp(program, program, "-dc", NULL);
     exit(0);
   }
   /* we're the parent process */
