@@ -71,6 +71,7 @@ void detect_ufs(SECTION *section, int level);
 void detect_sysv(SECTION *section, int level);
 void detect_bsd_disklabel(SECTION *section, int level);
 void detect_bsd_loader(SECTION *section, int level);
+void detect_solaris_disklabel(SECTION *section, int level);
 void detect_solaris_vtoc(SECTION *section, int level);
 void detect_qnx(SECTION *section, int level);
 
@@ -98,14 +99,15 @@ void detect_blank(SECTION *section, int level);
 
 DETECTOR detectors[] = {
   /* 1: disk image formats */
-  detect_vhd,            /* may stop */
-  detect_cdimage,        /* may stop */
+  detect_vhd,               /* may stop */
+  detect_cdimage,           /* may stop */
   detect_udif,
   /* 2: boot code */
   detect_linux_loader,
   detect_bsd_loader,
   /* 3: partition tables */
-  detect_bsd_disklabel,  /* may stop, recurses with FLAG_IN_DISKLABEL */
+  detect_bsd_disklabel,     /* may stop, recurses with FLAG_IN_DISKLABEL */
+  detect_solaris_disklabel, /* may stop, recurses with FLAG_IN_DISKLABEL */
   detect_solaris_vtoc,
   detect_amiga_partmap,
   detect_apple_partmap,

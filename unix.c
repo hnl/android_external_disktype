@@ -392,6 +392,73 @@ void detect_bsd_loader(SECTION *section, int level)
 }
 
 /*
+ * Solaris SPARC disklabel
+ */
+
+void detect_solaris_disklabel(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int i, off1, off2, types[8], did_recurse;
+  u4 sizes[8];
+  u8 starts[8], cylsize, offset;
+  char s[256], append[256], pn;
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  if (get_buffer(section, 0, 512, (void **)&buf) < 512)
+    return;
+
+  if (get_be_short(buf + 508) != 0xDABE)
+    return;
+
+  print_line(level, "Solaris SPARC disklabel");
+
+  cylsize = (u8)get_be_short(buf + 436) * (u8)get_be_short(buf + 438);
+  for (i = 0, off1 = 142, off2 = 444; i < 8; i++, off1 += 4, off2 += 8) {
+    types[i] = get_be_short(buf + off1);
+    starts[i] = get_be_long(buf + off2) * cylsize;
+    sizes[i] = get_be_long(buf + off2 + 4);
+  }
+
+  /* loop over partitions: print and analyze */
+  did_recurse = 0;
+  for (i = 0; i < 8; i++) {
+    pn = '0' + i;
+    if (sizes[i] == 0)
+      continue;
+
+    sprintf(append, " from %llu", starts[i]);
+    format_blocky_size(s, sizes[i], 512, "sectors", append);
+    print_line(level, "Partition %c: %s", pn, s);
+
+    print_line(level + 1, "Type %d",
+               types[i]);
+
+    offset = starts[i] * 512;
+    if (offset == 0) {
+      print_line(level + 1, "Includes the disklabel");
+
+      /* recurse for content detection, but carefully */
+      analyze_recursive(section, level + 1,
+                        offset, (u8)sizes[i] * 512,
+                        FLAG_IN_DISKLABEL);
+      did_recurse = 1;
+    } else {
+      /* recurse for content detection */
+      analyze_recursive(section, level + 1,
+                        offset, (u8)sizes[i] * 512,
+                        0);
+    }
+  }
+
+  if (did_recurse)
+    stop_detect();  /* don't run other detectors; we already did that
+                       for the first partition, which overlaps with
+                       the disklabel itself. */
+}
+
+/*
  * Solaris x86 vtoc
  */
 
