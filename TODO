@@ -1,4 +1,4 @@
-$Id: TODO,v 1.4 2003/03/14 16:20:16 chrisp Exp $   -*- text -*-
+$Id: TODO,v 1.5 2003/03/15 13:16:24 chrisp Exp $   -*- text -*-
 
  disktype ToDo
 ===============
@@ -13,6 +13,7 @@ Other disklabels: Solaris, Sun, SGI, OSF, Ultrix, Amiga, Acorn, LDM,
 Other FS: EFS, BFS, FFS, AFFS, ADFS, JFFS1/2, QNX4 FS, SysV FS,
   FreeVxFS
 
-Superblocks document
-
 Reverse-engineer the format of Apple disk images (esp. .dmg's)
+
+Create database of supported formats and their quirks
+Collect samples from various systems
