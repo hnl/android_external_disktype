@@ -55,11 +55,21 @@ void detect_iso(SECTION *section, int level)
 
   print_line(level, "ISO9660 file system");
 
-  /* read Volume ID */
-  get_string(buf + 40, 32, s);
-  for (i = 31; i >= 0 && s[i] == 32; i--)
-    s[i] = 0;
+  /* read Volume ID and other info */
+  get_padded_string(buf + 40, 32, ' ', s);
   print_line(level+1, "Volume name \"%s\"", s);
+
+  get_padded_string(buf + 318, 128, ' ', s);
+  if (s[0])
+    print_line(level+1, "Publisher   \"%s\"", s);
+
+  get_padded_string(buf + 446, 128, ' ', s);
+  if (s[0])
+    print_line(level+1, "Preparer    \"%s\"", s);
+
+  get_padded_string(buf + 574, 128, ' ', s);
+  if (s[0])
+    print_line(level+1, "Application \"%s\"", s);
 
   /* some other interesting facts */
   blocks = get_le_long(buf + 80);
@@ -109,7 +119,7 @@ void detect_iso(SECTION *section, int level)
       s[32] = 0;
       s[33] = 0;
       format_unicode(s, t);
-      for (i = strlen(t)-1; i >= 0 && t[i] == 32; i--)
+      for (i = strlen(t)-1; i >= 0 && t[i] == ' '; i--)
 	t[i] = 0;
       print_line(level+1, "Joliet extension, volume name \"%s\"", t);
       break;
