@@ -8,7 +8,7 @@ CC = gcc
 OBJS   = main.o lib.o \
          buffer.o file.o cdimage.o vpc.o compressed.o \
          detect.o apple.o amiga.o atari.o dos.o cdrom.o \
-         linux.o unix.o archives.o
+         linux.o unix.o beos.o archives.o
 TARGET = disktype
 
 CPPFLAGS = -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
@@ -16,17 +16,19 @@ CFLAGS   = -Wall
 LDFLAGS  =
 LIBS     =
 
-system = $(shell uname)
-ifeq ($(system),Linux)
-  CPPFLAGS += -DUSE_IOCTL_LINUX
-endif
-ifeq ($(system),FreeBSD)
-  # not entirely tested yet
-  #CPPFLAGS += -DUSE_IOCTL_FREEBSD
-endif
-ifeq ($(system),Darwin)
-  CPPFLAGS += -DUSE_MACOS_TYPE -DUSE_IOCTL_DARWIN
-  LIBS     += -framework CoreServices
+ifeq ($(NOSYS),)
+  system = $(shell uname)
+  ifeq ($(system),Linux)
+    CPPFLAGS += -DUSE_IOCTL_LINUX
+  endif
+  ifeq ($(system),FreeBSD)
+    # not entirely tested yet
+    #CPPFLAGS += -DUSE_IOCTL_FREEBSD
+  endif
+  ifeq ($(system),Darwin)
+    CPPFLAGS += -DUSE_MACOS_TYPE -DUSE_IOCTL_DARWIN
+    LIBS     += -framework CoreServices
+  endif
 endif
 
 # real making
