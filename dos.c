@@ -183,7 +183,7 @@ void detect_dos_partmap(SECTION *section, int level)
     if (bootflags[i] != 0x00 && bootflags[i] != 0x80)
       return;
     /* size non-zero -> entry in use */
-    if (sizes[i])
+    if (starts[i] && sizes[i])
       used = 1;
   }
   if (!used)
@@ -195,7 +195,7 @@ void detect_dos_partmap(SECTION *section, int level)
     start = starts[i];
     size = sizes[i];
     type = types[i];
-    if (size == 0) {
+    if (start == 0 || size == 0) {
       print_line(level, "Partition %d: unused", i+1);
       continue;
     }
