@@ -83,7 +83,7 @@ void finish_line(int level)
  * formatting functions
  */
 
-void format_size(char *buf, u8 size, int mult)
+void format_size(char *buf, u8 size, u4 mult)
 {
   int card;
 
@@ -132,7 +132,7 @@ void format_size(char *buf, u8 size, int mult)
   }
 }
 
-void format_ascii(char *from, char *to)
+void format_ascii(void *from, char *to)
 {
   u1 *p = (u1 *)from;
   u1 *q = (u1 *)to;
@@ -151,7 +151,7 @@ void format_ascii(char *from, char *to)
   *q = 0;
 }
 
-void format_unicode(char *from, char *to)
+void format_unicode(void *from, char *to)
 {
   u2 *p = (u2 *)from;
   u1 *q = (u1 *)to;
@@ -199,7 +199,7 @@ void format_uuid(void *uuid, char *to)
   }
 
   if ((variant & 4) == 0) {         /* 0 x x */
-    strcpy(to, " (NCS compatibility)");
+    strcpy(to, " (NCS)");
   } else if ((variant & 2) == 0) {  /* 1 0 x */
     sprintf(to, " (DCE, v%1.1d)", variant);
   } else if ((variant & 1) == 0) {  /* 1 1 0 */

@@ -98,12 +98,12 @@ void finish_line(int level);
 
 /* formatting functions */
 
-void format_size(char *buf, u8 size, int mult);
+void format_size(char *buf, u8 size, u4 mult);
 
-void format_ascii(char *from, char *to);
-void format_unicode(char *from, char *to);
+void format_ascii(void *from, char *to);
+void format_unicode(void *from, char *to);
 
-void format_uuid(void *uuid, char *to);
+void format_uuid(void *from, char *to);
 
 /* endian-aware data access */
 
