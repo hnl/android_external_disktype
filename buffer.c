@@ -37,6 +37,8 @@
 #define CHUNKSIZE (1<<CHUNKBITS)
 #define CHUNKMASK (CHUNKSIZE-1)
 
+#define MINBLOCKSIZE (256)
+
 #define HASHSIZE (13)
 #define HASHFUNC(start) (((start)>>CHUNKBITS) % HASHSIZE)
 
@@ -187,6 +189,7 @@ u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf)
 static CHUNK * ensure_chunk(SOURCE *s, CACHE *cache, u8 start)
 {
   CHUNK *c;
+  u8 pos, intra_off;
   u8 toread, result, curr_chunk;
 
   c = get_chunk_alloc(cache, start);
@@ -215,26 +218,62 @@ static CHUNK * ensure_chunk(SOURCE *s, CACHE *cache, u8 start)
   }
 
   /* try to read the missing piece */
-  if (s->size && s->size < c->start + CHUNKSIZE)
-    /* do not try to read beyond known end of file */
-    toread = s->size - c->end;
-  else
-    toread = CHUNKSIZE - c->len;
-  /* toread cannot be zero or negative due to the preconditions */
-  result = s->read(s, c->start + c->len, toread,
-		   c->buf + c->len);
-  if (result > 0) {
-    /* adjust offsets */
-    c->len += result;
-    c->end = c->start + c->len;
-    if (s->sequential)
-      s->seq_pos += result;
-  }
-  if (result < toread) {
-    /* we fell short, so it must have been an error or end-of-file */
-    /* make sure we don't try again */
-    if (s->size == 0 || s->size > c->end)
-      s->size = c->end;
+  if (s->read_block != NULL) {
+    /* use block-oriented read_block() method */
+
+    if (s->blocksize < MINBLOCKSIZE ||
+	s->blocksize > CHUNKSIZE ||
+	((s->blocksize & (s->blocksize - 1)) != 0)) {
+      bailout("Internal error: Invalid block size %d", s->blocksize);
+    }
+
+    for (intra_off = 0; intra_off < CHUNKSIZE; intra_off += s->blocksize) {
+      if (c->len >= intra_off + s->blocksize)
+	continue;  /* already read */
+      pos = c->start + intra_off;
+      if (s->size && pos >= s->size)
+	break;     /* whole block is past end of file */
+
+      /* read it */
+      if (s->read_block(s, pos, c->buf + intra_off)) {
+	/* success */
+	c->len = intra_off + s->blocksize;
+	c->end = c->start + c->len;
+      } else {
+	/* failure */
+	c->len = intra_off;  /* this is safe as it can only mean a shrink */
+	c->end = c->start + c->len;
+	/* note the new end of file if necessary */
+	if (s->size == 0 || s->size > c->end)
+	  s->size = c->end;
+	break;
+      }
+    }
+
+  } else {
+    /* use normal read() method */
+
+    if (s->size && s->size < c->start + CHUNKSIZE)
+      /* do not try to read beyond known end of file */
+      toread = s->size - c->end;
+    else
+      toread = CHUNKSIZE - c->len;
+    /* toread cannot be zero or negative due to the preconditions */
+    result = s->read(s, c->start + c->len, toread,
+		     c->buf + c->len);
+    if (result > 0) {
+      /* adjust offsets */
+      c->len += result;
+      c->end = c->start + c->len;
+      if (s->sequential)
+	s->seq_pos += result;
+    }
+    if (result < toread) {
+      /* we fell short, so it must have been an error or end-of-file */
+      /* make sure we don't try again */
+      if (s->size == 0 || s->size > c->end)
+	s->size = c->end;
+    }
   }
 
   return c;

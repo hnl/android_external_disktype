@@ -62,9 +62,11 @@ typedef struct source {
 
   int sequential;
   u8 seq_pos;
+  int blocksize;
   struct source *foundation;
 
   u8 (*read)(struct source *s, u8 pos, u8 len, void *buf);
+  int (*read_block)(struct source *s, u8 pos, void *buf);
   void (*close)(struct source *s);
 
   /* private data may follow */
