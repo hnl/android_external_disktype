@@ -319,7 +319,6 @@ void detect_linux_misc(SECTION *section, int level)
   /* minix file system */
   if (fill >= 2048) {
     int version = 0, namesize = 14;
-    u8 blocks;
 
     magic = get_le_short(buf + 1024 + 16);
     if (magic == 0x137F)
@@ -351,7 +350,7 @@ void detect_linux_misc(SECTION *section, int level)
 
   /* Linux romfs */
   if (memcmp(buf, "-rom1fs-", 8) == 0) {
-    u8 size = get_be_long(buf + 8);
+    size = get_be_long(buf + 8);
     print_line(level, "Linux romfs");
     print_line(level+1, "Volume name \"%.300s\"", (char *)(buf + 16));
     format_size(s, size, 1);
