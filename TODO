@@ -1,4 +1,4 @@
-$Id: TODO,v 1.6 2003/04/02 14:51:41 chrisp Exp $   -*- text -*-
+$Id: TODO,v 1.7 2003/04/15 19:04:37 chrisp Exp $   -*- text -*-
 
  disktype ToDo
 ===============
@@ -8,10 +8,10 @@ Add *BSD disklabel
 Add Apple-style UFS
 Add UDF (DVDs)
 Check EVMS
-Other disklabels: Sun, Solaris x86, SGI, OSF, Ultrix, Amiga, Acorn,
-  MS LDM, IBM, Minix, Unixware, Atari, EFI GPT
-Other FS: SGI EFS, BeFS, SCO BFS, Amiga FFS (AFFS), Acorn ADFS,
-  JFFS1/2, QNX4 FS, SysV FS, FreeVxFS, IBM CMS FS
+Other disklabels: Sun, Solaris x86, SGI, OSF, Ultrix, Acorn, MS LDM,
+  IBM, Minix, Unixware, EFI GPT
+Other FS: SGI EFS, BeFS, SCO BFS, Acorn ADFS, JFFS1/2, QNX4 FS,
+  SysV FS, FreeVxFS, IBM CMS FS
 
 Reverse-engineer the format of Apple disk images (esp. .dmg's)
 

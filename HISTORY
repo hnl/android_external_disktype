@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.8 2003/03/23 14:14:18 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.9 2003/04/15 19:04:37 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -41,12 +41,13 @@ program. He posted it to Usenet back in 1992 and asked me to include
 it in disktype so that the code would not be lost.
 
 
-Version 4 is still under development. It features the following
+Version 4 was released on Apr 15, 2003. It features the following
 improvements:
 
-Added file systems: Linux squashfs, XFS.
-Added other structures: -
-Improved file systems: -
+Added file systems: Linux squashfs, XFS, Amiga FS/FFS.
+Added other structures: Amiga "Rigid Disk" partition map, ATARI ST
+  (AHDI3) partition map.
+Improved file systems: FAT12/FAT16 (a.k.a. ATARI GEMDOS).
 Improved other structures: -
 
 

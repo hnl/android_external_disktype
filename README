@@ -1,4 +1,4 @@
-$Id: README,v 1.6 2003/04/15 15:08:19 chrisp Exp $   -*- text -*-
+$Id: README,v 1.7 2003/04/15 19:04:37 chrisp Exp $   -*- text -*-
 
  disktype 4
 ============
@@ -43,16 +43,18 @@ The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
   ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs, UFS (some
-  variations), JFS, Linux squashfs, XFS.
+  variations), JFS, Linux squashfs, XFS, Amiga FS/FFS.
 
-Partition maps: DOS/PC style, Apple.
+Partitioning: DOS/PC style, Apple, Amiga "Rigid Disk", ATARI ST
+  (AHDI3), Linux RAID physical disks, Linux LVM physical volumes.
+
+Other structures: Debian split floppy header, Linux swap.
 
 Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel.
 
-Archive formats: gzip, compress, bzip2, tar, cpio, bar, dump/restore.
+Compression formats: gzip, compress, bzip2.
 
-Other structures: Debian split floppy header, Linux swap, Linux RAID
-  physical disks, Linux LVM physical volumes.
+Archive formats: tar, cpio, bar, dump/restore.
 
 Compressed files (gzip, compress, bzip2 formats) will also have their
 contents analyzed using transparent decompression. The appropriate
