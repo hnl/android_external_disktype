@@ -1,4 +1,4 @@
-$Id: README,v 1.9 2003/05/01 09:00:23 chrisp Exp $   -*- text -*-
+$Id: README,v 1.10 2003/05/01 09:21:24 chrisp Exp $   -*- text -*-
 
  disktype 5
 ============
@@ -49,10 +49,10 @@ for some example command lines.
 
 The following formats are recognized by this version of disktype.
 
-File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
-  ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs, UFS (some
-  variations), JFS, Linux squashfs, XFS, Amiga FS/FFS, BeFS, QNX4 FS,
-  SysV FS (some variations).
+File systems: FAT12/FAT16/FAT32, NTFS, HPFS, MFS, HFS, HFS Plus,
+  ISO9660, ext2/ext3, Minix, ReiserFS, Linux romfs, Linux cramfs,
+  Linux squashfs, UFS (some variations), SysV FS (some variations),
+  JFS, XFS, Amiga FS/FFS, BeOS BFS, QNX4 FS.
 
 Partitioning: DOS/PC style, Apple, Amiga "Rigid Disk", ATARI ST
   (AHDI3), BSD disklabel, Linux RAID physical disks, Linux LVM
@@ -61,7 +61,7 @@ Partitioning: DOS/PC style, Apple, Amiga "Rigid Disk", ATARI ST
 Other structures: Debian split floppy header, Linux swap.
 
 Disk images: Raw CD image (.bin), Virtual PC hard disk image, Apple
-  UDIF disk image.
+  UDIF disk image (limited).
 
 Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel, FreeBSD
   loader.
