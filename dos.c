@@ -207,7 +207,7 @@ void detect_dos_partmap(SECTION *section, int level)
 
     print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
 
-    if (type == 0x05 || type == 0x85) {
+    if (type == 0x05 || type == 0x0f || type == 0x85) {
       /* extended partition */
       detect_dos_partmap_ext(section, start, level + 1, &extpartnum);
     } else {
