@@ -31,6 +31,10 @@
  * external detection functions
  */
 
+/* in amiga.c */
+void detect_amiga_partmap(SECTION *section, int level);
+void detect_amiga_fs(SECTION *section, int level);
+
 /* in apple.c */
 void detect_apple_partmap(SECTION *section, int level);
 void detect_apple_volume(SECTION *section, int level);
@@ -69,6 +73,8 @@ void detect_archive(SECTION *section, int level);
  */
 
 DETECTOR detectors[] = {
+  detect_amiga_partmap,
+  detect_amiga_fs,
   detect_apple_partmap,
   detect_apple_volume,
   detect_dos_partmap,
