@@ -343,4 +343,26 @@ void detect_bsd_loader(SECTION *section, int level)
   }
 }
 
+/*
+ * QNX4 file system
+ */
+
+void detect_qnx(SECTION *section, int level)
+{
+  unsigned char *buf;
+
+  if (get_buffer(section, 512, 512, (void **)&buf) < 512)
+    return;
+
+  /* check signature */
+  if (get_le_long(buf) != 0x0000002f)
+    return;
+  /* NOTE: This is actually the string "/", the file name of the root
+     directory. QNX4 fs does not have a real superblock, just an
+     aggregate of 4 inodes for certain special files. */
+
+  /* tell the user */
+  print_line(level, "QNX4 file system");
+}
+
 /* EOF */

@@ -67,6 +67,7 @@ void detect_xfs(SECTION *section, int level);
 void detect_ufs(SECTION *section, int level);
 void detect_bsd_disklabel(SECTION *section, int level);
 void detect_bsd_loader(SECTION *section, int level);
+void detect_qnx(SECTION *section, int level);
 
 /* in compressed.c */
 void detect_compressed(SECTION *section, int level);
@@ -114,6 +115,7 @@ DETECTOR detectors[] = {
   detect_jfs,
   detect_xfs,
   detect_ufs,
+  detect_qnx,
   /* 5: file formats */
   detect_archive,
   detect_compressed,  /* this is here because of boot disks */
