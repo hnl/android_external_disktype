@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.20 2003/12/30 10:10:41 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.21 2004/04/05 06:07:31 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -75,7 +75,8 @@ Improved file systems: ISO9660.
 Improved other structures: -
 
 
-Version 7 is still under development.
+Version 7 was released on Apr 5, 2004. It features the following
+improvements:
 
 Added file systems: 3DO CD-ROM file system, Veritas VxFS.
 Added other structures: Sega Dreamcast signature.
