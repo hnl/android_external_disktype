@@ -73,9 +73,6 @@ typedef struct section {
 
 typedef void (*DETECTOR)(SECTION *section, int level);
 
-/* for compatibility only */
-typedef s8 int8;
-
 
 /* detection dispatching function */
 
