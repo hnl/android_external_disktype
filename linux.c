@@ -202,13 +202,14 @@ void detect_linux_raid(SECTION *section, int level)
 }
 
 /*
- * Linux LVM
+ * Linux LVM1
  */
 
 void detect_linux_lvm(SECTION *section, int level)
 {
   unsigned char *buf;
   char s[256];
+  int minor_version, pv_number;
   u8 pe_size, pe_count, pe_start;
 
   if (get_buffer(section, 0, 1024, (void **)&buf) < 1024)
@@ -221,8 +222,10 @@ void detect_linux_lvm(SECTION *section, int level)
   if (get_le_long(buf + 36) == 0 || get_le_long(buf + 40) == 0)
     return;
 
-  print_line(level, "Linux LVM volume, version %d",
-	     (int)get_le_short(buf + 2));
+  minor_version = get_le_short(buf + 2);
+  print_line(level, "Linux LVM1 volume, version %d%s",
+	     minor_version,
+	     (minor_version < 1 || minor_version > 2) ? " (unknown)" : "");
 
   /* volume group name */
   get_string(buf + 172, 128, s);
@@ -232,14 +235,27 @@ void detect_linux_lvm(SECTION *section, int level)
   get_string(buf + 0x2c, 128, s);
   print_line(level + 1, "PV \"UUID\" %s", s);
 
+  /* number of this physical volume */
+  pv_number = get_le_long(buf + 432);
+  print_line(level + 1, "PV number %d", pv_number);
+
   /* volume size */
   pe_size = get_le_long(buf + 452);
   pe_count = get_le_long(buf + 456);
   format_blocky_size(s, pe_count, pe_size * 512, "PEs", NULL);
   print_line(level + 1, "Useable size %s", s);
 
-  /* first PE starts after the declared length of the PE tables */
-  pe_start = get_le_long(buf + 36) + get_le_long(buf + 40);
+  /* get start of first PE */
+  if (minor_version == 1) {
+    /* minor format 1: first PE starts after the declared length of the PE tables */
+    pe_start = get_le_long(buf + 36) + get_le_long(buf + 40);
+  } else if (minor_version == 2) {
+    /* minor format 2: a field in the header indicates this */
+    pe_start = get_le_long(buf + 464) << 9;
+  } else {
+    /* unknown minor format */
+    pe_start = 0;
+  }
 
   /* try to detect from first PE */
   if (pe_start > 0) {
