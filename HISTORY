@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.5 2003/03/15 13:16:38 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.6 2003/03/15 13:17:18 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -24,7 +24,7 @@ Improved file systems: ISO9660, Minix.
 Improved other structures: Linux swap.
 
 
-Version 3 was released on Mar 15, 2004. It features an extensive
+Version 3 was released on Mar 15, 2003. It features an extensive
 re-write of the buffering layer, in conjunction with transparent
 decompression of data compressed with gzip, compress, or bzip2. Raw CD
 image detection now works by actually looking at the data. In other
