@@ -1,4 +1,4 @@
-$Id: README,v 1.12 2003/12/30 10:10:41 chrisp Exp $   -*- text -*-
+$Id: README,v 1.13 2004/03/28 09:45:01 chrisp Exp $   -*- text -*-
 
  disktype 7
 ============
@@ -27,8 +27,14 @@ problems, you can disable all system-dependent features by setting the
 variable NOSYS, as in 'make NOSYS=1'.
 
 Running make results in the binary 'disktype'. Copy it to a 'bin'
-directory of your choice, optionally stripping it on the way. That's
-all.
+directory of your choice, optionally stripping it on the way. It does
+not require any additional files.
+
+The manual page 'disktype.1' can be copied to
+/usr/local/share/man/man1 or a similar directory that is suitable for
+your system and policy. If you package disktype for binary
+distribution, please also include the README, HISTORY, TODO, and
+LICENSE files in a place like /usr/share/doc/disktype.
 
 
  Usage
