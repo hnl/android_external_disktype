@@ -1,29 +1,37 @@
 # Makefile for disktype documentation
 
-FOP = ./fop.sh
+SOURCE            = disktype.xml
+TARGET_HTML_ONE   = $(patsubst %.xml,%.html,$(SOURCE))
+TARGET_HTML_CHUNK = index.html
+TARGET_LATEX      = $(patsubst %.xml,%.tex,$(SOURCE))
+TARGET_PDF        = $(patsubst %.xml,%.pdf,$(SOURCE))
 
-SOURCE      = disktype.xml
-TARGET_HTML = $(patsubst %.xml,%.html,$(SOURCE))
-TARGET_FO   = $(patsubst %.xml,%.fo,$(SOURCE))
-TARGET_PDF  = $(patsubst %.xml,%.pdf,$(SOURCE))
+XSL_HTML_ONE      = html-one.xsl
+XSL_HTML_CHUNK    = html-chunk.xsl
+XSL_LATEX         = latex.xsl
 
-all: $(TARGET_HTML)
 
-%.html: %.xml html.xsl
-	xsltproc -o $@ html.xsl $<
-#	xsltproc -o $@ /sw/share/xml/xsl/html/docbook.xsl $<
-#	xsltproc -o $@ /sw/share/xml/xsl/html/chunk.xsl $<
+all: $(TARGET_HTML_CHUNK)
 
-%.fo: %.xml
-	xsltproc -o $@ /sw/share/xml/xsl/fo/docbook.xsl $<
+$(TARGET_HTML_ONE): $(SOURCE) $(XSL_HTML_ONE)
+	xsltproc -o $@ $(XSL_HTML_ONE) $<
 
-%.pdf: %.fo
-	$(FOP) -fo $< -pdf $@
+$(TARGET_HTML_CHUNK): $(SOURCE) $(XSL_HTML_CHUNK)
+	xsltproc -o $@ $(XSL_HTML_CHUNK) $<
+
+$(TARGET_LATEX): $(SOURCE) $(XSL_LATEX)
+	xsltproc -o $@ $(XSL_LATEX) $<
+
+$(TARGET_PDF): $(TARGET_LATEX)
+	pdflatex $<
+	pdflatex $<
+	pdflatex $<
 
 check:
 	xmllint --noout --valid $(SOURCE)
 
 clean:
-	rm -f $(TARGET_HTML) $(TARGET_FO) $(TARGET_PDF)
+	rm -f *.html *.pdf
+	rm -f *.tex *.log *.aux *.toc *.out *.glo *.idx
 
 # EOF
