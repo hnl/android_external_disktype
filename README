@@ -1,4 +1,4 @@
-$Id: README,v 1.8 2003/05/01 08:57:32 chrisp Exp $   -*- text -*-
+$Id: README,v 1.9 2003/05/01 09:00:23 chrisp Exp $   -*- text -*-
 
  disktype 5
 ============
@@ -21,10 +21,10 @@ GCC, but disktype should compile with any C compiler. To change the
 compiler, you can edit the Makefile or set the standard variables CC,
 CPPFLAGS, CFLAGS, LDFLAGS, and LIBS from the make command line.
 
-The Makefile checks the 'uname' of your system and enables certain
-system-dependent features based on that. If you run into problems, you
-can disable all system-dependent features by setting the variable
-NOSYS, as in 'make NOSYS=1'.
+The Makefile uses uname to determine the system type and enables
+certain system-dependent features based on that. If you run into
+problems, you can disable all system-dependent features by setting the
+variable NOSYS, as in 'make NOSYS=1'.
 
 Running make results in the binary 'disktype'. Copy it to a 'bin'
 directory of your choice, optionally stripping it on the way. That's
