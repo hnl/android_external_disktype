@@ -187,10 +187,10 @@ u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf)
 static CHUNK * ensure_chunk(SOURCE *s, CACHE *cache, u8 start)
 {
   CHUNK *c;
-  u8 result, curr_chunk;
+  u8 toread, result, curr_chunk;
 
   c = get_chunk_alloc(cache, start);
-  if (c->len >= CHUNKSIZE)
+  if (c->len >= CHUNKSIZE || (s->size && c->end >= s->size))
     return c;  /* all is well */
 
   if (s->sequential) {
@@ -204,6 +204,10 @@ static CHUNK * ensure_chunk(SOURCE *s, CACHE *cache, u8 start)
 	if (s->seq_pos < curr_chunk)
 	  break;  /* it didn't work out... */
       }
+
+      /* re-check precondition since s->size may have changed */
+      if (s->size && c->end >= s->size)
+	return c;  /* there is no more data to read */
     }
 
     if (s->seq_pos != c->end)
@@ -211,7 +215,13 @@ static CHUNK * ensure_chunk(SOURCE *s, CACHE *cache, u8 start)
   }
 
   /* try to read the missing piece */
-  result = s->read(s, c->start + c->len, CHUNKSIZE - c->len,
+  if (s->size && s->size < c->start + CHUNKSIZE)
+    /* do not try to read beyond known end of file */
+    toread = s->size - c->end;
+  else
+    toread = CHUNKSIZE - c->len;
+  /* toread cannot be zero or negative due to the preconditions */
+  result = s->read(s, c->start + c->len, toread,
 		   c->buf + c->len);
   if (result > 0) {
     /* adjust offsets */
@@ -219,7 +229,13 @@ static CHUNK * ensure_chunk(SOURCE *s, CACHE *cache, u8 start)
     c->end = c->start + c->len;
     if (s->sequential)
       s->seq_pos += result;
-  }  /* NOTE: errors are not reported here */
+  }
+  if (result < toread) {
+    /* we fell short, so it must have been an error or end-of-file */
+    /* make sure we don't try again */
+    if (s->size == 0 || s->size > c->end)
+      s->size = c->end;
+  }
 
   return c;
 }

@@ -50,6 +50,7 @@ static void close_file(SOURCE *s);
 SOURCE *init_file_source(int fd)
 {
   FILE_SOURCE *fs;
+  off_t result;
 
   fs = (FILE_SOURCE *)malloc(sizeof(FILE_SOURCE));
   if (fs == NULL)
@@ -61,7 +62,11 @@ SOURCE *init_file_source(int fd)
   fs->c.close = close_file;
   fs->fd = fd;
 
-  fs->c.size = lseek(fd, 0, SEEK_END);
+  result = lseek(fd, 0, SEEK_END);
+  if (result > 0)
+    fs->c.size = result;
+  else if (result < 0)
+    errore("Can't determine file size");
 
   return (SOURCE *)fs;
 }
@@ -81,7 +86,7 @@ static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf)
   /* seek to the requested position */
   result_seek = lseek(fd, pos, SEEK_SET);
   if (result_seek != pos) {
-    errore("Seek to %llu returned %lld", pos, result_seek);
+    errore("Seek to %llu failed", pos);
     return 0;
   }
 
@@ -93,9 +98,10 @@ static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf)
     if (result_read < 0) {
       if (errno == EINTR || errno == EAGAIN)
 	continue;
-      errore("On file read");
+      errore("Data read failed at offset %llu", pos + got);
       break;
     } else if (result_read == 0) {
+      /* simple EOF, no message */
       break;
     } else {
       len -= result_read;
