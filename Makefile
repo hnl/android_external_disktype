@@ -34,7 +34,7 @@ ifeq ($(NOSYS),)
   ifeq ($(system),AmigaOS)
     CC       += -noixemul
     CFLAGS   += -m68020-60 -msmall-code
-    LDFLAGS  += -m68020-60 -msmall-code   # not sure if this is required
+    LDFLAGS  += -m68020-60
   endif
 endif
 

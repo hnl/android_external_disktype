@@ -28,6 +28,117 @@
 #include "global.h"
 
 /*
+ * Amiga partition type codes
+ *
+ * Based on the dostypes list of the Ambient file manager
+ * as of Apr 02, 2005.
+ */
+
+struct dostype {
+  char *typecode;
+  int isfs;   /* true = native Amiga filesystem (affects printout when */
+              /*  found at the start of the boot sector) */
+  char *name;
+};
+
+struct dostype amiga_dostypes[] = {
+
+  { "DOS\0x00", 1, "Amiga OFS file system (non-intl.)" },
+  { "DOS\0x01", 1, "Amiga FFS file system (non-intl.)" },
+  { "DOS\0x02", 1, "Amiga OFS file system (intl., no dir cache)" },
+  { "DOS\0x03", 1, "Amiga FFS file system (intl., no dir cache)" },
+  { "DOS\0x04", 1, "Amiga OFS file system (intl., dir cache)" },
+  { "DOS\0x05", 1, "Amiga FFS file system (intl., dir cache)" },
+  { "DOS\0x06", 1, "Amiga OFS file system (LNFS)" },
+  { "DOS\0x07", 1, "Amiga FFS file system (LNFS)" },
+
+  { "muFS",     1, "Amiga muFS FFS file system (intl., no dir cache)" },
+  { "muF\0x00", 1, "Amiga muFS OFS file system (non-intl.)" },
+  { "muF\0x01", 1, "Amiga muFS FFS file system (non-intl.)" },
+  { "muF\0x02", 1, "Amiga muFS OFS file system (intl., no dir cache)" },
+  { "muF\0x03", 1, "Amiga muFS FFS file system (intl., no dir cache)" },
+  { "muF\0x04", 1, "Amiga muFS OFS file system (intl., dir cache)" },
+  { "muF\0x05", 1, "Amiga muFS FFS file system (intl., dir cache)" },
+
+  { "SFS\0x00", 1, "Amiga Smart File System" },
+
+  { "PFS\0x00", 1, "Amiga PFS file system 0" },
+  { "PFS\0x01", 1, "Amiga PFS file system 1" },
+  { "PFS\0x02", 1, "Amiga PFS file system 2" },
+  { "PFS\0x03", 1, "Amiga PFS file system 3" },
+  { "PDS\0x02", 1, "Amiga PFS file system 2, SCSIdirect" },
+  { "PDS\0x03", 1, "Amiga PFS file system 3, SCSIdirect" },
+  { "muPF",     1, "Amiga PFS file system, multiuser" },
+
+  { "AFS\0x00", 1, "Amiga AFS file system" },
+  { "AFS\0x01", 1, "Amiga AFS file system (experimental)" },
+
+  { "UNI\0x00", 0, "Amiga Amix 0" },
+  { "UNI\0x01", 0, "Amiga Amix 1" },
+
+  { "KICK",     1, "Amiga Kickstart disk" },
+  { "BOOU",     1, "Amiga generic boot disk" },
+  { "BAD\0x00", 0, "Unreadable disk" },
+  { "NDOS",     0, "Not a DOS disk" },
+  { "resv",     0, "reserved" },
+
+  { "CD00",     0, "CD-ROM High Sierra format" },
+  { "CD01",     0, "CD-ROM ISO9660 format" },
+  { "CDDA",     0, "CD Audio" },
+  { "CDFS",     0, "CD-ROM - Amiga CDrive or AmiCDFS" },
+  { "\0x66\0x2d\0xab\0xac", 0, "CD-ROM - AsimCDFS" },
+
+  { "NBR\0x07", 0, "NetBSD root" },
+  { "NBS\0x01", 0, "NetBSD swap" },
+  { "NBU\0x07", 0, "NetBSD other" },
+
+  { "LNX\0x00", 0, "Linux native" },
+  { "EXT2",     0, "Linux ext2" },
+  { "SWAP",     0, "Linux swap" },
+  { "SWP\0x00", 0, "Linux swap" },
+  { "MNX\0x00", 0, "Linux minix" },
+
+  { "MAC\0x00", 0, "Macintosh HFS" },
+  { "MSD\0x00", 0, "MS-DOS disk" },
+  { "MSH\0x00", 0, "MS-DOS PC-Task hardfile" },
+  { "BFFS",     0, "Berkeley Fast Filesystem" },
+
+  { NULL, 0, NULL },
+};
+
+static char * get_name_for_dostype(const unsigned char *dostype)
+{
+  int i;
+
+  for (i = 0; amiga_dostypes[i].name; i++)
+    if (memcmp(dostype, amiga_dostypes[i].typecode, 4) == 0)
+      return amiga_dostypes[i].name;
+  return "Unknown";
+}
+
+static void format_dostype(char *buf, const unsigned char *dostype)
+{
+  int i;
+  unsigned char c;
+  char *p;
+
+  p = buf;
+  for (i = 0; i < 4; i++) {
+    c = dostype[i];
+    if (c < 10) {
+      *p++ = '\\';
+      *p++ = '0' + c;
+    } else if (c < 32) {
+      sprintf(p, "0x%02x", (int)c);
+      p = strchr(p, 0);
+    } else {
+      *p++ = (char)c;
+    }
+  }
+  *p = 0;
+}
+
+/*
  * Amiga "Rigid Disk" partition map
  */
 
@@ -99,13 +210,10 @@ void detect_amiga_partmap(SECTION *section, int level)
     if (s[0])
       print_line(level + 1, "Drive name \"%s\"", s);
 
-    /*
- 192/c0 char4DosType 'DOS' and the FFS/OFS flag only
-      also 'UNI'\0 = AT&T SysV filesystem
-      'UNI'\1 = UNIX boot filesystem
-      'UNI'\2 = BSD filesystem for SysV
-      'resv' = reserved (swap space)
-    */
+    /* show dos type */
+    format_dostype(s, buf + 192);
+    print_line(level + 1, "Type \"%s\" (%s)", s,
+               get_name_for_dostype(buf + 192));
 
     /* detect contents */
     if (size > 0 && start > 0) {
@@ -122,26 +230,30 @@ void detect_amiga_partmap(SECTION *section, int level)
 void detect_amiga_fs(SECTION *section, int level)
 {
   unsigned char *buf;
-  int flags;
-  char s[256];
+  int i, isfs;
+  char s[256], *typename;
 
   if (get_buffer(section, 0, 512, (void **)&buf) < 512)
     return;
 
-  if (memcmp(buf, "DOS", 3) == 0) {
-    flags = buf[3];
-    if (flags & 1)
-      strcpy(s, "Amiga FFS file system");
-    else
-      strcpy(s, "Amiga OFS file system");
-    if (flags & 4)
-      strcat(s, " (intl., dir cache)");
-    else if (flags & 2)
-      strcat(s, " (intl., no dir cache)");
-    else
-      strcat(s, " (non-intl., no dir cache)");
+  /* look for one of the signatures */
+  isfs = 0;
+  typename = NULL;
+  for (i = 0; amiga_dostypes[i].name; i++)
+    if (memcmp(buf, amiga_dostypes[i].typecode, 4) == 0) {
+      isfs = amiga_dostypes[i].isfs;
+      typename = amiga_dostypes[i].name;
+      break;
+    }
+  if (typename == NULL)
+    return;
 
-    print_line(level, "%s", s);
+  if (isfs) {
+
+    print_line(level, "%s", typename);
+
+    format_dostype(s, buf);
+    print_line(level + 1, "Type \"%s\"", s);
 
     if (section->size == 512*11*2*80) {
       print_line(level+1, "Size matches DD floppy");
@@ -149,8 +261,11 @@ void detect_amiga_fs(SECTION *section, int level)
       print_line(level+1, "Size matches HD floppy");
     }
 
-  } else if (memcmp(buf, "PFS", 3) == 0) {
-    print_line(level, "Amiga Professional File System");
+  } else {
+
+    format_dostype(s, buf);
+    print_line(level, "Amiga type code \"%s\" (%s)", s, typename);
+
   }
 }
 
