@@ -256,11 +256,6 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
       if (type == 0x05 || type == 0x85) {
 	/* inner extended partition */
 
-	/*
-	print_line(level, "(link in entry %d: %ld sectors starting at %lld+%ld)",
-		   i+1, size, extbase, start);
-	*/
-
 	nexttablebase = extbase + start;
 
       } else {
