@@ -197,4 +197,28 @@ static void dump_boot_catalog(SECTION *section, u8 pos, int level)
     print_line(level, "Vendor-specific sections follow");
 }
 
+/*
+ * Various CD file systems
+ */
+
+void detect_cdrom_misc(SECTION *section, int level)
+{
+  unsigned char *buf;
+
+  /* get first sector */
+  if (get_buffer(section, 0, 2048, (void **)&buf) < 2048)
+    return;
+
+  /* Sega Dreamcast signature */
+  if (memcmp(buf, "SEGA SEGAKATANA SEGA ENTERPRISES", 32) == 0) {
+    print_line(level, "Sega Dreamcast signature");
+  }
+
+  /* 3DO filesystem */
+  if (memcmp(buf, "\0x01\0x5a\0x5a\0x5a\0x5a\0x5a\0x01\0x00", 8) == 0 &&
+      memcmp(buf + 0x28, "CD-ROM", 6) == 0) {
+    print_line(level, "3DO CD-ROM file system");
+  }
+}
+
 /* EOF */

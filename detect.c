@@ -51,6 +51,7 @@ void detect_hpfs(SECTION *section, int level);
 
 /* in cdrom.c */
 void detect_iso(SECTION *section, int level);
+void detect_cdrom_misc(SECTION *section, int level);
 
 /* in udf.c */
 void detect_udf(SECTION *section, int level);
@@ -120,6 +121,7 @@ DETECTOR detectors[] = {
   detect_ntfs,
   detect_hpfs,
   detect_udf,
+  detect_cdrom_misc,
   detect_iso,
   detect_ext23,
   detect_reiser,

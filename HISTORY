@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.18 2003/06/15 07:15:11 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.19 2003/12/17 20:02:13 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -72,6 +72,14 @@ Added file systems: UDF.
 Added other structures: Solaris x86 disklabel (vtoc), Solaris SPARC
   disklabel.
 Improved file systems: ISO9660.
+Improved other structures: -
+
+
+Version 7 is still under development.
+
+Added file systems: 3DO CD-ROM file system.
+Added other structures: Sega Dreamcast signature.
+Improved file systems: HFS Plus.
 Improved other structures: -
 
 
