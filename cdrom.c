@@ -31,7 +31,7 @@
  * sub-functions
  */
 
-static void dump_boot_catalog(SECTION *section, int8 pos, int level);
+static void dump_boot_catalog(SECTION *section, u8 pos, int level);
 
 /*
  * ISO9660 file system
@@ -40,8 +40,9 @@ static void dump_boot_catalog(SECTION *section, int8 pos, int level);
 void detect_iso(SECTION *section, int level)
 {
   char s[256], t[256];
-  int i, sector, type, blocksize;
-  int8 blocks, bcpos;
+  int i, sector, type;
+  u4 blocksize;
+  u8 blocks, bcpos;
   unsigned char *buf;
 
   /* get the volume descriptor */
@@ -65,7 +66,7 @@ void detect_iso(SECTION *section, int level)
   blocks = get_le_long(buf + 80);
   blocksize = get_le_short(buf + 128);
   format_size(s, blocks, blocksize);
-  print_line(level+1, "Data Size %s (%lld blocks of %d bytes)",
+  print_line(level+1, "Data Size %s (%llu blocks of %lu bytes)",
 	     s, blocks, blocksize);
 
   for (sector = 17; ; sector++) {
@@ -92,7 +93,7 @@ void detect_iso(SECTION *section, int level)
       }
 
       bcpos = get_le_long(buf + 0x47);
-      print_line(level+1, "El Torito boot record, catalog at %lld", bcpos);
+      print_line(level+1, "El Torito boot record, catalog at %llu", bcpos);
 
       /* boot catalog */
       dump_boot_catalog(section, bcpos * 2048, level + 2);
@@ -141,10 +142,11 @@ static char *media_types[16] = {
   "reserved type 14", "reserved type 15"
 };
 
-static void dump_boot_catalog(SECTION *section, int8 pos, int level)
+static void dump_boot_catalog(SECTION *section, u8 pos, int level)
 {
   unsigned char *buf;
-  int bootable, media, start, preload, more;
+  int bootable, media, more;
+  u4 start, preload;
   char s[256];
 
   /* get boot catalog */
@@ -174,7 +176,7 @@ static void dump_boot_catalog(SECTION *section, int8 pos, int level)
 
   /* print and analyze further */
   format_size(s, preload, 512);
-  print_line(level, "%s %s image, starts at %d, preloads %s",
+  print_line(level, "%s %s image, starts at %lu, preloads %s",
 	     bootable ? "Bootable" : "Non-bootable",
 	     media_types[media], start, s);
   if (start > 0) {

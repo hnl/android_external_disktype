@@ -154,7 +154,7 @@ void detect_dos_partmap(SECTION *section, int level)
 {
   unsigned char *buf;
   int i, off, used, type, types[4], bootflags[4];
-  unsigned long start, size, starts[4], sizes[4];
+  u4 start, size, starts[4], sizes[4];
   int extpartnum = 5;
   char s[256];
 
@@ -200,7 +200,7 @@ void detect_dos_partmap(SECTION *section, int level)
     }
 
     format_size(s, size, 512);
-    print_line(level, "Partition %d: %s (%ld sectors starting at %ld%s)",
+    print_line(level, "Partition %d: %s (%lu sectors starting at %lu%s)",
 	       i+1, s, size, start,
 	       (bootflags[i] == 0x80) ? ", bootable" : "");
 
@@ -224,9 +224,9 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 				   int level, int *extpartnum)
 {
   unsigned char *buf;
-  int8 tablebase, nexttablebase;
+  u8 tablebase, nexttablebase;
   int i, off, type, types[4];
-  unsigned long start, size, starts[4], sizes[4];
+  u4 start, size, starts[4], sizes[4];
   char s[256];
 
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
@@ -271,7 +271,7 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 	SECTION rs;
 
 	format_size(s, size, 512);
-	print_line(level, "Partition %d: %s (%ld sectors starting at %lld+%ld)",
+	print_line(level, "Partition %d: %s (%lu sectors starting at %llu+%lu)",
 		   *extpartnum, s, size, tablebase, start);
 	(*extpartnum)++;
 	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
@@ -294,10 +294,9 @@ static char *fatnames[] = { "FAT12", "FAT16", "FAT32" };
 
 void detect_fat(SECTION *section, int level)
 {
-  int i, score;
-  int sectsize, clustersize, reserved, fatcount, dirsize, fatsize;
-  int fattype;
-  int8 sectcount, clustercount;
+  int i, score, fattype;
+  u4 sectsize, clustersize, reserved, fatcount, dirsize, fatsize;
+  u8 sectcount, clustercount;
   unsigned char *buf;
   char s[256];
 
@@ -367,7 +366,7 @@ void detect_fat(SECTION *section, int level)
 	     fatnames[fattype], score, 5);
 
   format_size(s, clustercount, clustersize * sectsize);
-  print_line(level + 1, "Volume size %s (%lld clusters of %d bytes)",
+  print_line(level + 1, "Volume size %s (%llu clusters of %lu bytes)",
 	     s, clustercount, clustersize * sectsize);
 
   /* get the cached volume name if present */
@@ -398,8 +397,8 @@ void detect_fat(SECTION *section, int level)
 
 void detect_ntfs(SECTION *section, int level)
 {
-  int sectsize, clustersize;
-  int8 sectcount;
+  u4 sectsize, clustersize;
+  u8 sectcount;
   unsigned char *buf;
   char s[256];
 
@@ -430,7 +429,7 @@ void detect_ntfs(SECTION *section, int level)
   print_line(level, "NTFS file system");
 
   format_size(s, sectcount, sectsize);
-  print_line(level + 1, "Volume size %s (%lld sectors of %d bytes)",
+  print_line(level + 1, "Volume size %s (%llu sectors of %lu bytes)",
 	     s, sectcount, sectsize);
 }
 
@@ -442,7 +441,7 @@ void detect_hpfs(SECTION *section, int level)
 {
   unsigned char *buf;
   char s[256];
-  int8 sectcount;
+  u8 sectcount;
 
   if (get_buffer(section, 16*512, 512, (void **)&buf) < 512)
     return;
@@ -455,7 +454,7 @@ void detect_hpfs(SECTION *section, int level)
 
   sectcount = get_le_long(buf + 16);
   format_size(s, sectcount, 512);
-  print_line(level + 1, "Volume size %s (%lld sectors of 512 bytes)",
+  print_line(level + 1, "Volume size %s (%llu sectors of 512 bytes)",
 	     s, sectcount);
 
   /* TODO: BPB in boot sector, volume label -- information? */
