@@ -73,6 +73,9 @@ void detect_compressed(SECTION *section, int level);
 /* in cdimage.c */
 void detect_cdimage(SECTION *section, int level);
 
+/* in vpc.c */
+void detect_vhd(SECTION *section, int level);
+
 /* in archives.c */
 void detect_archive(SECTION *section, int level);
 
@@ -81,6 +84,8 @@ void detect_archive(SECTION *section, int level);
  */
 
 DETECTOR detectors[] = {
+  /* image formats first */
+  detect_vhd,
   /* boot code first */
   detect_linux_loader,
   detect_bsd_loader,

@@ -6,7 +6,7 @@ RM = rm -f
 CC = gcc
 
 OBJS   = main.o lib.o \
-         buffer.o file.o cdimage.o compressed.o \
+         buffer.o file.o cdimage.o vpc.o compressed.o \
          detect.o apple.o amiga.o atari.o dos.o cdrom.o \
          linux.o unix.o archives.o
 TARGET = disktype
