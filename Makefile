@@ -17,8 +17,15 @@ LDFLAGS  =
 LIBS     =
 
 system = $(shell uname)
+ifeq ($(system),Linux)
+  CPPFLAGS += -DUSE_IOCTL_LINUX
+endif
+ifeq ($(system),FreeBSD)
+  # not entirely tested yet
+  #CPPFLAGS += -DUSE_IOCTL_FREEBSD
+endif
 ifeq ($(system),Darwin)
-  CPPFLAGS += -DUSE_MACOS_TYPE
+  CPPFLAGS += -DUSE_MACOS_TYPE -DUSE_IOCTL_DARWIN
   LIBS     += -framework CoreServices
 endif
 

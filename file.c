@@ -27,6 +27,21 @@
 
 #include "global.h"
 
+#define DEBUG_SIZE 0
+
+#ifdef USE_IOCTL_LINUX
+#include <linux/fs.h>
+#endif
+
+#ifdef USE_IOCTL_FREEBSD
+#include <sys/disklabel.h>
+#endif
+
+#ifdef USE_IOCTL_DARWIN
+#include <sys/ioctl.h>
+#include <sys/disk.h>
+#endif
+
 /*
  * types
  */
@@ -42,6 +57,8 @@ typedef struct file_source {
 
 static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf);
 static void close_file(SOURCE *s);
+
+static int check_position(int fd, u8 pos);
 
 /*
  * initialize the file source
@@ -62,12 +79,117 @@ SOURCE *init_file_source(int fd, int filekind)
   fs->c.close = close_file;
   fs->fd = fd;
 
+  /*
+   * Determine the size using various methods. The first method that
+   * works is used.
+   */
+
+  /*
+   * lseek() to the end:
+   * Works on files. On some systems (Linux), this also works on devices.
+   */
   if (fs->c.size == 0) {
     result = lseek(fd, 0, SEEK_END);
+#if DEBUG_SIZE
+    printf("Size: lseek returned %lld\n", result);
+#endif
     if (result > 0)
       fs->c.size = result;
+    /*
     else if (result < 0)
       errore("Can't determine file size");
+    */
+  }
+
+#ifdef USE_IOCTL_LINUX
+  /*
+   * ioctl, Linux style:
+   * Works on certain devices.
+   */
+  if (fs->c.size == 0 && filekind != 0) {
+    u4 blockcount;
+    if (ioctl(fd, BLKGETSIZE, (void *)&blockcount) >= 0) {
+      fs->c.size = (u8)blockcount * 512;
+#if DEBUG_SIZE
+      printf("Size: Linux ioctl reports %llu (%lu blocks)\n",
+	     fs->c.size, blockcount);
+#endif
+      }
+    }
+  }
+#endif
+
+#ifdef USE_IOCTL_FREEBSD
+  /*
+   * ioctl, FreeBSD style:
+   * Works on partitioned hard disks or somthing like that.
+   */
+  if (fs->c.size == 0 && filekind != 0) {
+    struct disklabel dl;
+    if (ioctl(fd, DIOCGDINFO, &dl) >= 0) {
+      fs->c.size = (u8) dl.d_ncylinders * dl.d_secpercyl * dl.d_secsize;
+      /* TODO: check this, it's the whole disk size... */
+#if DEBUG_SIZE
+      printf("Size: FreeBSD ioctl reports %llu\n", fs->c.size);
+#endif
+    }
+  }
+#endif
+
+#ifdef USE_IOCTL_DARWIN
+  /*
+   * ioctl, Darwin style:
+   * Works on certain devices.
+   */
+  if (fs->c.size == 0 && filekind != 0) {
+    u4 blocksize;
+    u8 blockcount;
+    if (ioctl(fd, DKIOCGETBLOCKSIZE, (void *)&blocksize) >= 0) {
+      if (ioctl(fd, DKIOCGETBLOCKCOUNT, (void *)&blockcount) >= 0) {
+        fs->c.size = blockcount * blocksize;
+#if DEBUG_SIZE
+	printf("Size: Darwin ioctl reports %llu (%llu blocks of %lu bytes)\n",
+	       fs->c.size, blockcount, blocksize);
+#endif
+      }
+    }
+  }
+#endif
+
+  /*
+   * binary search:
+   * Works on anything that can seek, but is quite expensive.
+   */
+  if (fs->c.size == 0) {
+    u8 lower, upper, current;
+
+    /* TODO: check that the target can seek at all */
+
+#if DEBUG_SIZE
+    printf("Size: Doing a binary search\n");
+#endif
+
+    /* first, find an upper bound starting from a reasonable guess */
+    lower = 0;
+    upper = 1024 * 1024;  /* start with 1MB */
+    while (check_position(fd, upper)) {
+      lower = upper;
+      upper <<= 2;
+    }
+
+    /* second, nail down the size between the lower and upper bounds */
+    while (upper > lower + 1) {
+      current = (lower + upper) >> 1;
+      if (check_position(fd, current))
+	lower = current;
+      else
+	upper = current;
+    }
+    fs->c.size = lower + 1;
+
+#if DEBUG_SIZE
+    printf("Size: Binary search reports %llu\n", fs->c.size);
+#endif
   }
 
   return (SOURCE *)fs;
@@ -100,7 +222,7 @@ static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf)
     if (result_read < 0) {
       if (errno == EINTR || errno == EAGAIN)
 	continue;
-      errore("Data read failed at offset %llu", pos + got);
+      errore("Data read failed at position %llu", pos + got);
       break;
     } else if (result_read == 0) {
       /* simple EOF, no message */
@@ -125,6 +247,25 @@ static void close_file(SOURCE *s)
 
   if (fd >= 0)
     close(fd);
+}
+
+/*
+ * check if the given position is inside the file's size
+ */
+
+static int check_position(int fd, u8 pos)
+{
+  char buf[2];
+
+#if DEBUG_SIZE
+    printf("      Probing %llu\n", pos);
+#endif
+
+  if (lseek(fd, pos, SEEK_SET) != pos)
+    return 0;
+  if (read(fd, buf, 1) != 1)
+    return 0;
+  return 1;
 }
 
 /* EOF */
