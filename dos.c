@@ -90,7 +90,7 @@ struct systypes i386_sys_types[] = {
   { 0x75, "PC/IX" },
   { 0x80, "Old Minix" },
   { 0x81, "Minix / old Linux" },
-  { 0x82, "Linux swap" },
+  { 0x82, "Linux swap / Solaris" },
   { 0x83, "Linux" },
   { 0x84, "OS/2 hidden C: drive" },
   { 0x85, "Linux extended" },
@@ -194,10 +194,8 @@ void detect_dos_partmap(SECTION *section, int level)
     start = starts[i];
     size = sizes[i];
     type = types[i];
-    if (start == 0 || size == 0) {
-      print_line(level, "Partition %d: unused", i+1);
+    if (start == 0 || size == 0)
       continue;
-    }
 
     format_size(s, size, 512);
     print_line(level, "Partition %d: %s (%lu sectors starting at %lu%s)",
