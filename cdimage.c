@@ -40,13 +40,62 @@ typedef struct cdimage_source {
  * helper functions
  */
 
+static SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset);
 static u8 read_cdimage(SOURCE *s, u8 pos, u8 len, void *buf);
 
 /*
- * initialize the cd image
+ * cd image detection
  */
 
-SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset)
+static unsigned char syncbytes[12] =
+  { 0, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 0 };
+
+void detect_cdimage(SECTION *section, int level)
+{
+  int mode, off;
+  unsigned char *buf;
+  SOURCE *s;
+  SECTION rs;
+
+  if (get_buffer(section, 0, 2352, (void **)&buf) < 2352)
+    return;
+
+  /* check sync bytes as signature */
+  if (memcmp(buf, syncbytes, 12) != 0)
+    return;
+
+  /* get mode of the track -- this determines sector layout */
+  mode = buf[15];
+  if (mode == 1) {
+    /* standard data track */
+    print_line(level, "Raw CD image, Mode 1");
+    off = 16;
+  } else if (mode == 2) {
+    /* free-form track, assume XA form 1 */
+    print_line(level, "Raw CD image, Mode 2, assuming Form 1");
+    off = 24;
+  } else
+    return;
+
+  /* create wrapped source */
+  s = init_cdimage_source(section->source, section->pos + off);
+
+  /* analyze it */
+  rs.source = s;
+  rs.pos = 0;
+  rs.size = s->size;
+  detect(&rs, level);
+
+  /* destroy wrapped source */
+  close_source(s);
+}
+
+/*
+ * initialize the cd image source
+ */
+
+static SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset)
 {
   CDIMAGE_SOURCE *src;
 

@@ -56,6 +56,9 @@ void detect_unix_misc(SECTION *section, int level);
 /* in compressed.c */
 void detect_compressed(SECTION *section, int level);
 
+/* in cdimage.c */
+void detect_cdimage(SECTION *section, int level);
+
 /* in archives.c */
 void detect_archive(SECTION *section, int level);
 
@@ -80,6 +83,7 @@ DETECTOR detectors[] = {
   detect_unix_misc,
   detect_archive,
   detect_compressed,
+  detect_cdimage,
  NULL };
 
 /*
@@ -93,30 +97,6 @@ void detect(SECTION *section, int level)
   /* run the modularized detectors */
   for (i = 0; detectors[i]; i++)
     (*detectors[i])(section, level);
-
-  /* check size for possible raw CD image */
-  if (section->size && section->size < (1 << 30) &&
-      (section->size % 2352) == 0) {
-    int headlens[] = { 16, 24, -1 };
-    SOURCE *s;
-    SECTION rs;
-
-    print_line(level, "Size divisible by 2352, interpreting as raw CD image");
-
-    for (i = 0; headlens[i] >= 0; i++) {
-      /* create wrapped source */
-      s = init_cdimage_source(section->source, section->pos + headlens[i]);
-
-      /* analyze it */
-      rs.source = s;
-      rs.pos = 0;
-      rs.size = s->size;
-      detect(&rs, level);
-
-      /* destroy wrapped source */
-      close_source(s);
-    }
-  }
 }
 
 /* EOF */

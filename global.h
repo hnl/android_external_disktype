@@ -79,7 +79,6 @@ typedef void (*DETECTOR)(SECTION *section, int level);
 /* source and buffer stuff */
 
 SOURCE *init_file_source(int fd);
-SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset);
 
 u8 get_buffer(SECTION *section, u8 pos, u8 len, void **buf);
 u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf);
