@@ -31,13 +31,13 @@
  * sub-functions
  */
 
-static void dump_boot_catalog(int8 basepos, int8 pos, int level);
+static void dump_boot_catalog(SECTION *section, int8 pos, int level);
 
 /*
  * ISO9660 file system
  */
 
-void detect_iso(int8 pos, int level)
+void detect_iso(SECTION *section, int level)
 {
   char s[256], t[256];
   int i, sector, type, blocksize;
@@ -45,7 +45,7 @@ void detect_iso(int8 pos, int level)
   unsigned char *buf;
 
   /* get the volume descriptor */
-  if (get_buffer(pos + 32768, 2048, (void **)&buf) < 2048)
+  if (get_buffer(section, 32768, 2048, (void **)&buf) < 2048)
     return;
 
   /* check signature */
@@ -70,7 +70,7 @@ void detect_iso(int8 pos, int level)
 
   for (sector = 17; ; sector++) {
     /* get next descriptor */
-    if (get_buffer(pos + sector * 2048, 2048, (void **)&buf) < 2048)
+    if (get_buffer(section, sector * 2048, 2048, (void **)&buf) < 2048)
       return;
 
     /* check signature */
@@ -95,12 +95,15 @@ void detect_iso(int8 pos, int level)
       print_line(level+1, "El Torito boot record, catalog at %lld", bcpos);
 
       /* boot catalog */
-      bcpos = pos + bcpos * 2048;
-      dump_boot_catalog(pos, bcpos, level + 2);
+      dump_boot_catalog(section, bcpos * 2048, level + 2);
 
       break;
 
-    case 2:  /* Joliet */
+    case 1:  /* Primary Volume Descriptor */
+      print_line(level+1, "Additional Primary Volume Descriptor");
+      break;
+
+    case 2:  /* Supplementary Volume Descriptor, Joliet */
       /* read Volume ID */
       memcpy(s, buf + 40, 32);
       s[32] = 0;
@@ -109,6 +112,10 @@ void detect_iso(int8 pos, int level)
       for (i = strlen(t)-1; i >= 0 && t[i] == 32; i--)
 	t[i] = 0;
       print_line(level+1, "Joliet extension, volume name \"%s\"", t);
+      break;
+
+    case 3:  /* Volume Partition Descriptor */
+      print_line(level+1, "Volume Partition Descriptor");
       break;
 
     default:
@@ -134,14 +141,14 @@ static char *media_types[16] = {
   "reserved type 14", "reserved type 15"
 };
 
-static void dump_boot_catalog(int8 basepos, int8 pos, int level)
+static void dump_boot_catalog(SECTION *section, int8 pos, int level)
 {
   unsigned char *buf;
   int bootable, media, start, preload, more;
   char s[256];
 
   /* get boot catalog */
-  if (get_buffer(pos, 2048, (void **)&buf) < 2048)
+  if (get_buffer(section, pos, 2048, (void **)&buf) < 2048)
     return;
 
   /* check validation entry (must be first) */
@@ -170,8 +177,13 @@ static void dump_boot_catalog(int8 basepos, int8 pos, int level)
   print_line(level, "%s %s image, starts at %d, preloads %s",
 	     bootable ? "Bootable" : "Non-bootable",
 	     media_types[media], start, s);
-  if (start > 0)
-    detect_from(basepos + (int8)start * 2048, level + 1);
+  if (start > 0) {
+    SECTION rs;
+    rs.source = section->source;
+    rs.pos = (u8)start * 2048;
+    rs.size = 0;
+    detect(&rs, level + 1);
+  }
 
   if (more)
     print_line(level, "Vendor-specific sections follow");

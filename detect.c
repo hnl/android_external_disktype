@@ -32,19 +32,24 @@
  */
 
 /* in apple.c */
-void detect_apple_partmap(int8 pos, int level);
-void detect_apple_volume(int8 pos, int level);
+void detect_apple_partmap(SECTION *section, int level);
+void detect_apple_volume(SECTION *section, int level);
 
 /* in dos.c */
-void detect_dos_partmap(int8 pos, int level);
-void detect_fat(int8 pos, int level);
+void detect_dos_partmap(SECTION *section, int level);
+void detect_fat(SECTION *section, int level);
+void detect_ntfs(SECTION *section, int level);
+void detect_hpfs(SECTION *section, int level);
 
 /* in cdrom.c */
-void detect_iso(int8 pos, int level);
+void detect_iso(SECTION *section, int level);
 
 /* in unix.c */
-void detect_ext23(int8 pos, int level);
-void detect_unix_misc(int8 pos, int level);
+void detect_ext23(SECTION *section, int level);
+void detect_reiser(SECTION *section, int level);
+void detect_linux_raid(SECTION *section, int level);
+void detect_linux_lvm(SECTION *section, int level);
+void detect_unix_misc(SECTION *section, int level);
 
 /*
  * general detectors
@@ -55,30 +60,26 @@ DETECTOR detectors[] = {
   detect_apple_volume,
   detect_dos_partmap,
   detect_fat,
+  detect_ntfs,
+  detect_hpfs,
   detect_iso,
   detect_ext23,
+  detect_reiser,
+  detect_linux_raid,
+  detect_linux_lvm,
   detect_unix_misc,
  NULL };
-
-/*
- * main routine detection
- */
-
-void detect(void)
-{
-  detect_from(0, 0);
-}
 
 /*
  * main recursive detection function
  */
 
-void detect_from(int8 pos, int level)
+void detect(SECTION *section, int level)
 {
   int i, fill;
   unsigned char *buf;
 
-  fill = get_buffer(pos, 4096, (void **)&buf);
+  fill = get_buffer(section, 0, 4096, (void **)&buf);
   if (fill < 512) {
     print_line(level, "Not enough data for analysis");
     return;
@@ -95,7 +96,30 @@ void detect_from(int8 pos, int level)
 
   /* now run the modularized detectors */
   for (i = 0; detectors[i]; i++)
-    (*detectors[i])(pos, level);
+    (*detectors[i])(section, level);
+
+  /* check size for possible raw CD image */
+  if (section->size && (section->size % 2352) == 0) {
+    int headlens[] = { 16, 24, -1 };
+    SOURCE *s;
+    SECTION rs;
+
+    print_line(level, "Size divisible by 2352, interpreting as raw CD image");
+
+    for (i = 0; headlens[i] >= 0; i++) {
+      /* create wrapped source */
+      s = init_cdimage_source(section->source, section->pos + headlens[i]);
+
+      /* analyze it */
+      rs.source = s;
+      rs.pos = 0;
+      rs.size = s->size;
+      detect(&rs, level);
+
+      /* destroy wrapped source */
+      close_source(s);
+    }
+  }
 }
 
 /* EOF */

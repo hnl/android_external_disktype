@@ -1,6 +1,6 @@
 /*
  * buffer.c
- * Reads data from disk and maintains a cache.
+ * Manages data reading and caching.
  *
  * Copyright (c) 2003 Christoph Pfisterer
  *
@@ -39,7 +39,7 @@
  */
 
 typedef struct readcache {
-  int8 start, end, len;
+  u8 start, end, len;
   void *buf;
   struct readcache *next;
 } READCACHE;
@@ -47,69 +47,44 @@ typedef struct readcache {
 /* TODO: use a sorted tree (AVL?) instead */
 
 /*
- * module-global vars
+ * retrieve a piece of the source, entry point for detection
  */
 
-static int fd;
-static int8 limit;
-
-static READCACHE *cache = NULL;
-
-/*
- * helper functions
- */
-
-static int8 read_safely(int fd, void *buf, int8 len);
-
-/*
- * initialize the system
- */
-
-void init_buffer(int the_fd, int8 filesize)
+u8 get_buffer(SECTION *section, u8 pos, u8 len, void **buf)
 {
-  READCACHE *trav, *travnext;
+  SOURCE *s;
 
-  /* drop any earlier cache */
-  for (trav = cache; trav != NULL; trav = travnext) {
-    travnext = trav->next;
-    free(trav->buf);
-    free(trav);
-  }
-  cache = NULL;
+  /* get source info */
+  s = section->source;
+  pos += section->pos;
 
-  /* remember the descriptor */
-  fd = the_fd;
-  limit = filesize;
-  if (limit < 0)
-    limit = 0;
-
-  /* put beginning of file into cache */
-  get_buffer(0, 32768, NULL);
+  return get_buffer_real(s, pos, len, buf);
 }
 
 /*
- * retrieve a piece of the file
+ * actual retrieval, entry point for layering
  */
 
-int8 get_buffer(int8 pos, int8 len, void **buf)
+u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf)
 {
   READCACHE *trav, *rc;
-  int8 end = pos + len;
-  int8 round_start, round_len;
-  int8 available;
-  int8 result;
+  u8 end, round_start, round_len, result, available;
 
   /* sanity check */
-  if (len <= 0 || pos < 0)
+  if (len == 0)
     return 0;
 
-  /* TODO: keep a deduced "size limit" around and check it */
+  /* get source info */
+  if (s->size && pos >= s->size) {
+    error("Request for data beyond end of file (pos %llu)", pos);
+    return 0;
+  }
+  end = pos + len;
 
-
-  /* STEP 1: try to fulfill from chache right away */
+  /* STEP 1: try to fulfill from cache right away */
 
   /* search for a block that wholly contains the request */
-  for (trav = cache; trav != NULL; trav = trav->next) {
+  for (trav = (READCACHE *)s->cache_head; trav != NULL; trav = trav->next) {
     if (trav->start <= pos && trav->end >= end) {
       /* found, calculate return data */
       if (buf)
@@ -117,6 +92,9 @@ int8 get_buffer(int8 pos, int8 len, void **buf)
       return len;
     }
   }
+
+
+  /* TODO: special treatment for "sequential" sources */
 
 
   /* STEP 2: try to fulfill by concatenating existing blocks */
@@ -146,70 +124,60 @@ int8 get_buffer(int8 pos, int8 len, void **buf)
 
   /* STEP 3: just read the whole block from disk in the req'd size */
 
-  /* seek and read, freeing the new block on error */
-  result = lseek(fd, rc->start, SEEK_SET);
-  if (result != rc->start) {
-    errore("Seek to %lld returned %lld", rc->start, result);
-    free(rc->buf);
-    free(rc);
-    return 0;
-  }
-  result = read_safely(fd, rc->buf, rc->len);
+  /* call the read function */
+  result = s->read(s, rc->start, rc->len, rc->buf);
   if (result <= 0) {
-    errore("Reading %lld bytes at %lld failed", rc->len, rc->start);
+    errore("Reading %llu bytes at %llu failed", rc->len, rc->start);
     free(rc->buf);
     free(rc);
     return 0;
   }
   if (result < rc->len) {
-    errore("Reading %lld bytes at %lld got only %lld bytes",
+    errore("Reading %llu bytes at %llu got only %llu bytes",
 	   rc->len, rc->start, result);
     rc->len = result;
-    /* TODO: deduct a new size limit when not all was read */
   }
 
   /* adjust end marker (len may have changed above) and add to cache */
   rc->end = rc->start + rc->len;
-  rc->next = cache;
-  cache = rc;
+  rc->next = (READCACHE *)s->cache_head;
+  s->cache_head = rc;
 
   /* calculate return data (may be truncated) */
   if (buf)
     *buf = rc->buf + (pos - rc->start);
-  available = rc->len - (pos - rc->start);
-  if (available < 0)
-    available = 0;
-  if (len > available)
-    len = available;
+  if (rc->len <= pos - rc->start)
+    len = 0;
+  else {
+    available = rc->len - (pos - rc->start);
+    if (len > available)
+      len = available;
+  }
   return len;
 }
 
 /*
- * helper: a safe variant of read(2)
- *
- * note the slightly different error return semantics
+ * dispose of a source
  */
 
-static int8 read_safely(int fd, void *buf, int8 len)
+void close_source(SOURCE *s)
 {
-  int8 got, have = 0;
+  READCACHE *trav, *travnext;
 
-  while (len > 0) {
-    got = read(fd, buf, len);
-    if (got < 0) {
-      if (errno == EINTR || errno == EAGAIN)
-	continue;
-      errore("On cache read");
-      break;
-    } else if (got == 0) {
-      break;
-    } else {
-      have += got;
-      len -= got;
-      buf = ((char *)buf + got);
-    }
+  /* drop the cache */
+  for (trav = (READCACHE *)s->cache_head; trav != NULL; trav = travnext) {
+    travnext = trav->next;
+    free(trav->buf);
+    free(trav);
   }
-  return have;
+  s->cache_head = NULL;
+
+  /* type-specific cleanup */
+  if (s->close != NULL)
+    (*s->close)(s);
+
+  /* release memory for the structure */
+  free(s);
 }
 
 /* EOF */

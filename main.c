@@ -78,6 +78,8 @@ static void analyze_file(const char *filename)
   struct stat sb;
   int8 filesize;
   char *reason;
+  SOURCE *s;
+  SECTION section;
 
   print_line(0, "--- %s", filename);
 
@@ -127,13 +129,18 @@ static void analyze_file(const char *filename)
     return;
   }
 
-  /* init the read cache */
-  init_buffer(fd, filesize);
+  /* create a source */
+  s = init_file_source(fd);
 
   /* now analyze it */
-  detect();
+  section.source = s;
+  section.pos = 0;
+  section.size = s->size;
+  detect(&section, 0);
 
+  /* finish it up */
   print_line(0, "");
+  close_source(s);
 }
 
 /*

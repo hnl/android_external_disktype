@@ -39,19 +39,50 @@
 
 /* types */
 
-typedef long long int int8;
+typedef signed char s1;
+typedef unsigned char u1;
+typedef short int s2;
+typedef unsigned short int u2;
+typedef long int s4;
+typedef unsigned long int u4;
+typedef long long int s8;
+typedef unsigned long long int u8;
+
+typedef struct source {
+  u8 size;
+  void *cache_head;
+
+  int sequential;
+  u8 seq_pos;
+  struct source *foundation;
+
+  u8 (*read)(struct source *s, u8 pos, u8 len, void *buf);
+  void (*close)(struct source *s);
+
+  /* private data may follow */
+} SOURCE;
+
+typedef struct section {
+  u8 pos, size;
+  SOURCE *source;
+} SECTION;
+
+typedef s8 int8;
 
 /* detection stuff */
 
-void detect(void);
-void detect_from(int8 pos, int level);
+void detect(SECTION *section, int level);
 
-typedef void (*DETECTOR)(int8 pos, int level);
+typedef void (*DETECTOR)(SECTION *section, int level);
 
-/* buffer stuff */
+/* source and buffer stuff */
 
-void init_buffer(int fd, int8 filesize);
-int8 get_buffer(int8 pos, int8 len, void **buf);
+SOURCE *init_file_source(int fd);
+SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset);
+
+u8 get_buffer(SECTION *section, u8 pos, u8 len, void **buf);
+u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf);
+void close_source(SOURCE *s);
 
 /* output formatting */
 

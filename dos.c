@@ -147,9 +147,10 @@ static char * get_name_for_type(int type)
  * DOS-style partition map / MBR
  */
 
-static void detect_dos_partmap_ext(int8 pos, int level, int *extpartnum);
+static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
+				   int level, int *extpartnum);
 
-void detect_dos_partmap(int8 pos, int level)
+void detect_dos_partmap(SECTION *section, int level)
 {
   unsigned char *buf;
   int i, off, used, type, types[4], bootflags[4];
@@ -157,10 +158,11 @@ void detect_dos_partmap(int8 pos, int level)
   int extpartnum = 5;
   char s[256];
 
-  if (pos != 0)
+  /* partition maps only occur at the start of a device */
+  if (section->pos != 0)
     return;
 
-  if (get_buffer(pos, 512, (void **)&buf) < 512)
+  if (get_buffer(section, 0, 512, (void **)&buf) < 512)
     return;
 
   /* check signature */
@@ -206,32 +208,30 @@ void detect_dos_partmap(int8 pos, int level)
 
     if (type == 0x05 || type == 0x85) {
       /* extended partition */
-      detect_dos_partmap_ext(pos + (int8)start * 512, level + 1, &extpartnum);
+      detect_dos_partmap_ext(section, start, level + 1, &extpartnum);
     } else {
       /* recurse for content detection */
-      detect_from(pos + (int8)start * 512, level + 1);
+      SECTION rs;
+      rs.source = section->source;
+      rs.pos = section->pos + (u8)start * 512;
+      rs.size = (u8)size * 512;
+      detect(&rs, level + 1);
     }
   }
 }
 
-static void detect_dos_partmap_ext(int8 pos, int level, int *extpartnum)
+static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
+				   int level, int *extpartnum)
 {
   unsigned char *buf;
-  int8 extbase, tablebase, nexttablebase;
+  int8 tablebase, nexttablebase;
   int i, off, type, types[4];
   unsigned long start, size, starts[4], sizes[4];
   char s[256];
 
-  /* calculate sector offset of extended partition */
-  if (pos & 0x1ff) {
-    print_line(level, "Offset not sector-aligned!");
-    return;
-  }
-  extbase = pos >> 9;
-
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
     /* read sector from linked list */
-    if (get_buffer(tablebase << 9, 512, (void **)&buf) < 512)
+    if (get_buffer(section, tablebase << 9, 512, (void **)&buf) < 512)
       return;
 
     /* check signature */
@@ -268,6 +268,7 @@ static void detect_dos_partmap_ext(int8 pos, int level, int *extpartnum)
 
       } else {
 	/* logical partition */
+	SECTION rs;
 
 	format_size(s, size, 512);
 	print_line(level, "Partition %d: %s (%ld sectors starting at %lld+%ld)",
@@ -276,7 +277,10 @@ static void detect_dos_partmap_ext(int8 pos, int level, int *extpartnum)
 	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
 
 	/* recurse for content detection */
-	detect_from((tablebase + start) * 512, level + 1);
+	rs.source = section->source;
+	rs.pos = (tablebase + start) * 512;
+	rs.size = (u8)size * 512;
+	detect(&rs, level + 1);
       }
     }
   }
@@ -288,7 +292,7 @@ static void detect_dos_partmap_ext(int8 pos, int level, int *extpartnum)
 
 static char *fatnames[] = { "FAT12", "FAT16", "FAT32" };
 
-void detect_fat(int8 pos, int level)
+void detect_fat(SECTION *section, int level)
 {
   int i, score;
   int sectsize, clustersize, reserved, fatcount, dirsize, fatsize;
@@ -297,7 +301,7 @@ void detect_fat(int8 pos, int level)
   unsigned char *buf;
   char s[256];
 
-  if (get_buffer(pos, 1024, (void **)&buf) < 1024)
+  if (get_buffer(section, 0, 512, (void **)&buf) < 512)
     return;
 
   /* first, some hard tests */
@@ -309,6 +313,9 @@ void detect_fat(int8 pos, int level)
   /* sectors per cluster: must be a power of two */
   clustersize = buf[13];
   if (clustersize == 0 || (clustersize & (clustersize - 1)))
+    return;
+  /* since the above is also present on NTFS, make sure it's not NTFS... */
+  if (memcmp(buf + 3, "NTFS    ", 8) == 0)
     return;
 
   /* next, some soft tests, taking score */
@@ -383,6 +390,75 @@ void detect_fat(int8 pos, int level)
 	print_line(level + 1, "Volume name \"%s\"", s);
     }
   }
+}
+
+/*
+ * NTFS file system
+ */
+
+void detect_ntfs(SECTION *section, int level)
+{
+  int sectsize, clustersize;
+  int8 sectcount;
+  unsigned char *buf;
+  char s[256];
+
+  if (get_buffer(section, 0, 512, (void **)&buf) < 512)
+    return;
+
+  /* check signatures */
+  if (memcmp(buf + 3, "NTFS    ", 8) != 0)
+    return;
+  /* disabled for now, mkntfs(8) doesn't generate it
+  if (memcmp(buf + 0x24, "\0x80\0x00\0x80\0x00", 4) != 0)
+    return;
+  */
+
+  /* sector size: must be a power of two */
+  sectsize = get_le_short(buf + 11);
+  if (sectsize < 512 || (sectsize & (sectsize - 1)))
+    return;
+  /* sectors per cluster: must be a power of two */
+  clustersize = buf[13];
+  if (clustersize == 0 || (clustersize & (clustersize - 1)))
+    return;
+
+  /* get size in sectors */
+  sectcount = get_le_quad(buf + 0x28);
+
+  /* tell the user */
+  print_line(level, "NTFS file system");
+
+  format_size(s, sectcount, sectsize);
+  print_line(level + 1, "Volume size %s (%lld sectors of %d bytes)",
+	     s, sectcount, sectsize);
+}
+
+/*
+ * HPFS file system
+ */
+
+void detect_hpfs(SECTION *section, int level)
+{
+  unsigned char *buf;
+  char s[256];
+  int8 sectcount;
+
+  if (get_buffer(section, 16*512, 512, (void **)&buf) < 512)
+    return;
+
+  if (memcmp(buf, "\0xF9\0x95\0xE8\0x49\0xFA\0x53\0xE9\0xC5", 8) != 0)
+    return;
+
+  print_line(level, "HPFS file system (version %d, functional version %d)",
+	     (int)buf[8], (int)buf[9]);
+
+  sectcount = get_le_long(buf + 16);
+  format_size(s, sectcount, 512);
+  print_line(level + 1, "Volume size %s (%lld sectors of 512 bytes)",
+	     s, sectcount);
+
+  /* TODO: BPB in boot sector, volume label -- information? */
 }
 
 /* EOF */

@@ -31,14 +31,15 @@
  * Apple partition map detection
  */
 
-void detect_apple_partmap(int8 pos, int level)
+void detect_apple_partmap(SECTION *section, int level)
 {
   int i, magic, count;
   char s[256];
   unsigned char *buf;
   int8 start, size;
 
-  if (pos != 0)  /* partition maps only occur at the start of a device */
+  /* partition maps only occur at the start of a device */
+  if (section->pos != 0)
     return;
 
   /*
@@ -47,7 +48,7 @@ void detect_apple_partmap(int8 pos, int level)
     }
   */
 
-  if (get_buffer(512, 512, (void **)&buf) < 512)
+  if (get_buffer(section, 512, 512, (void **)&buf) < 512)
     return;
 
   magic = get_be_short(buf);
@@ -66,7 +67,7 @@ void detect_apple_partmap(int8 pos, int level)
     /* read the right sector */
     /* NOTE: the previous run through the loop might have called
      *  get_buffer indirectly, invalidating our old pointer */
-    if (i > 1 && get_buffer(i * 512, 512, (void **)&buf) < 512)
+    if (i > 1 && get_buffer(section, i * 512, 512, (void **)&buf) < 512)
       return;
 
     /* check signature */
@@ -88,8 +89,13 @@ void detect_apple_partmap(int8 pos, int level)
     print_line(level+1, "Type \"%s\"", s);
 
     /* recurse for content detection */
-    if (start > count)  /* avoid recursion */
-      detect_from(start * 512, level + 1);
+    if (start > count) {  /* avoid recursion on self */
+      SECTION rs;
+      rs.source = section->source;
+      rs.pos = section->pos + (u8)start * 512;
+      rs.size = (u8)size * 512;
+      detect(&rs, level + 1);
+    }
   }
 }
 
@@ -97,7 +103,7 @@ void detect_apple_partmap(int8 pos, int level)
  * Apple volume formats: MFS, HFS, HFS Plus
  */
 
-void detect_apple_volume(int8 pos, int level)
+void detect_apple_volume(SECTION *section, int level)
 {
   char s[256], t[256];
   unsigned char *buf;
@@ -105,7 +111,7 @@ void detect_apple_volume(int8 pos, int level)
   int blocksize, blockstart;
   int8 blockcount;
 
-  if (get_buffer(pos + 1024, 512, (void **)&buf) < 512)
+  if (get_buffer(section, 1024, 512, (void **)&buf) < 512)
     return;
 
   magic = get_be_short(buf);
@@ -129,10 +135,14 @@ void detect_apple_volume(int8 pos, int level)
 	       s, blockcount, blocksize);
 
     if (get_be_short(buf + 0x7c) == 0x482B) {
+      SECTION rs;
       int8 offset = get_be_short(buf + 0x7e) * blocksize + blockstart * 512;
       print_line(level, "HFS wrapper for HFS Plus");
 
-      detect_from(pos + offset, level + 1);
+      rs.source = section->source;
+      rs.pos = section->pos + offset;
+      rs.size = 0;  /* TODO */
+      detect(&rs, level + 1);
     }
 
   } else if (magic == 0x482B) {

@@ -1,4 +1,4 @@
- disktype 1
+ disktype 2
 ============
 
 The purpose of disktype is to detect the content format of a disk or
@@ -40,13 +40,21 @@ like your hard disk will likely require root rights.
 The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
-  ISO9660.
+  ISO9660, ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs.
 
 Partition maps: DOS/PC style, Apple.
 
 Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel.
 
-Miscellaneous: Debian split floppy header, gzip header, Linux swap.
+Other structures: Debian split floppy header, gzip header, Linux swap,
+  Linux RAID physical disks, Linux LVM physical volumes.
+
+In addition, raw-mode CD images (e.g. the .bin file of a .bin/.cue
+pair) are recognized by size (multiple of 2352 bytes) and translated
+transparently. This mechanism is quite crude -- it doesn't know the
+exact mode and has to guess, it doesn't know about multiple tracks,
+and so on -- but it seems sufficient to look inside most .bin/.cue
+images.
 
 
  Future Plans

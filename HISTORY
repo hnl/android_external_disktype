@@ -1,0 +1,25 @@
+ disktype History
+==================
+
+Version 1 was released on Feb 11, 2003. It supported the following
+formats:
+
+File systems: FAT12/FAT16/FAT32, ext2/ext3, Minix, MFS, HFS, HFS Plus,
+  ISO9660.
+Partition maps: DOS/PC style, Apple.
+Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel.
+Other structures: Debian split floppy header, gzip header, Linux swap.
+
+
+Version 2 was released on Feb 18, 2003. It brought improvements to the
+infrastructure, making it possible to analyze the .bin file of a
+.bin/.cue pair in place. In other news:
+
+Added file systems: ReiserFS, NTFS, HPFS, Linux romfs, Linux cramfs.
+Added other structures: Linux RAID physical disks, Linux LVM physical
+  volumes.
+Improved file systems: ISO9660, Minix.
+Improved other structures: Linux swap.
+
+
+EOF
