@@ -37,6 +37,7 @@ void detect_apple_partmap(SECTION *section, int level)
   char s[256];
   unsigned char *buf;
   u8 start, size;
+  SECTION rs;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -90,10 +91,10 @@ void detect_apple_partmap(SECTION *section, int level)
 
     /* recurse for content detection */
     if (start > count) {  /* avoid recursion on self */
-      SECTION rs;
       rs.source = section->source;
       rs.pos = section->pos + start * 512;
       rs.size = size * 512;
+      rs.flags = section->flags;
       detect(&rs, level + 1);
     }
   }
@@ -109,7 +110,8 @@ void detect_apple_volume(SECTION *section, int level)
   unsigned char *buf;
   u2 magic, version;
   u4 blocksize, blockstart;
-  u8 blockcount;
+  u8 blockcount, offset;
+  SECTION rs;
 
   if (get_buffer(section, 1024, 512, (void **)&buf) < 512)
     return;
@@ -135,14 +137,15 @@ void detect_apple_volume(SECTION *section, int level)
 	       s, blockcount, blocksize);
 
     if (get_be_short(buf + 0x7c) == 0x482B) {
-      SECTION rs;
-      u8 offset = (u8)get_be_short(buf + 0x7e) * blocksize +
-	(u8)blockstart * 512;
       print_line(level, "HFS wrapper for HFS Plus");
+
+      offset = (u8)get_be_short(buf + 0x7e) * blocksize +
+	(u8)blockstart * 512;
 
       rs.source = section->source;
       rs.pos = section->pos + offset;
       rs.size = 0;  /* TODO */
+      rs.flags = section->flags;
       detect(&rs, level + 1);
     }
 

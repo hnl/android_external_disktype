@@ -184,6 +184,7 @@ static void dump_boot_catalog(SECTION *section, u8 pos, int level)
     rs.source = section->source;
     rs.pos = (u8)start * 2048;
     rs.size = 0;
+    rs.flags = section->flags;
     detect(&rs, level + 1);
   }
 

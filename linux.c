@@ -254,6 +254,7 @@ void detect_linux_lvm(SECTION *section, int level)
     rs.source = section->source;
     rs.pos = section->pos + pe_start;
     rs.size = 0;
+    rs.flags = section->flags;
     detect(&rs, level + 1);
   }
 }
@@ -307,7 +308,7 @@ void detect_linux_swap(SECTION *section, int level)
 }
 
 /*
- * various signatures
+ * various file systems
  */
 
 void detect_linux_misc(SECTION *section, int level)
@@ -320,25 +321,6 @@ void detect_linux_misc(SECTION *section, int level)
   fill = get_buffer(section, 0, 2048, (void **)&buf);
   if (fill < 512)
     return;
-
-  /* boot sector stuff */
-  if (memcmp(buf + 2, "LILO", 4) == 0)
-    print_line(level, "LILO boot code");
-  if (memcmp(buf + 3, "SYSLINUX", 8) == 0)
-    print_line(level, "SYSLINUX boot code");
-  if (find_memory(buf, 512, "GRUB ", 5) >= 0)
-    print_line(level, "GRUB boot code");
-  if (fill >= 1024 && find_memory(buf, 1024, "ISOLINUX", 8) >= 0)
-    print_line(level, "ISOLINUX boot code");
-
-  /* Debian install floppy splitter */
-  if (memcmp(buf, "Floppy split ", 13) == 0) {
-    char *name = (char *)buf + 32;
-    char *number = (char *)buf + 164;
-    char *total = (char *)buf + 172;
-    print_line(level, "Debian floppy split, name \"%s\", disk %s of %s",
-	       name, number, total);
-  }
 
   /* minix file system */
   if (fill >= 2048) {
@@ -427,10 +409,47 @@ void detect_linux_misc(SECTION *section, int level)
       print_line(level + 1, "Block size %s", s);
     }
   }
+}
+
+/*
+ * various boot code signatures
+ */
+
+void detect_linux_loader(SECTION *section, int level)
+{
+  int fill;
+  unsigned char *buf;
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  fill = get_buffer(section, 0, 2048, (void **)&buf);
+  if (fill < 512)
+    return;
+
+  /* boot sector stuff */
+  if (memcmp(buf + 2, "LILO", 4) == 0)
+    print_line(level, "LILO boot code");
+  if (memcmp(buf + 3, "SYSLINUX", 8) == 0)
+    print_line(level, "SYSLINUX boot code");
+  if (find_memory(buf, 512, "GRUB ", 5) >= 0)
+    print_line(level, "GRUB boot code");
+  if (fill >= 1024 && find_memory(buf, 1024, "ISOLINUX", 8) >= 0)
+    print_line(level, "ISOLINUX boot code");
 
   /* Linux kernel loader */
   if (fill >= 1024 && memcmp((char *)buf + 512 + 2, "HdrS", 4) == 0) {
     print_line(level, "Linux kernel build-in loader");
+  }
+
+  /* Debian install floppy splitter */
+  /* (not exactly boot code, but should be detected before gzip/tar */
+  if (memcmp(buf, "Floppy split ", 13) == 0) {
+    char *name = (char *)buf + 32;
+    char *number = (char *)buf + 164;
+    char *total = (char *)buf + 172;
+    print_line(level, "Debian floppy split, name \"%s\", disk %s of %s",
+	       name, number, total);
   }
 }
 

@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.9 2003/04/15 19:04:37 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.10 2003/04/19 21:15:10 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -49,6 +49,15 @@ Added other structures: Amiga "Rigid Disk" partition map, ATARI ST
   (AHDI3) partition map.
 Improved file systems: FAT12/FAT16 (a.k.a. ATARI GEMDOS).
 Improved other structures: -
+
+
+Version 5 is still under development. It features the following
+improvements:
+
+Added file systems: -
+Added other structures: BSD disklabel, FreeBSD i386 boot code.
+Improved file systems: BSD UFS.
+Improved other structures: DOS partition map.
 
 
 EOF

@@ -149,6 +149,7 @@ static void analyze_file(const char *filename)
   section.source = s;
   section.pos = 0;
   section.size = s->size;
+  section.flags = 0;
   detect(&section, 0);
 
   /* finish it up */

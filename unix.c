@@ -124,20 +124,20 @@ void detect_ufs(SECTION *section, int level)
       magic = get_ve_long(en, buf + 1372);
 
       if (magic == 0x00011954) {
-	print_line(level, "UFS file system, %s",
-		   get_ve_name(en));
+	print_line(level, "UFS file system, %dK offset, %s",
+		   at, get_ve_name(en));
       } else if (magic == 0x00095014) {
-	print_line(level, "UFS file system, long file names, %s",
-		   get_ve_name(en));
+	print_line(level, "UFS file system, %dK offset, long file names, %s",
+		   at, get_ve_name(en));
       } else if (magic == 0x00195612) {
-	print_line(level, "UFS file system, fs_featurebits, %s",
-		   get_ve_name(en));
+	print_line(level, "UFS file system, %dK offset, fs_featurebits, %s",
+		   at, get_ve_name(en));
       } else if (magic == 0x05231994) {
-	print_line(level, "UFS file system, fs_featurebits, >4GB support, %s",
-		   get_ve_name(en));
+	print_line(level, "UFS file system, %dK offset, fs_featurebits, >4GB support, %s",
+		   at, get_ve_name(en));
       } else if (magic == 0x19540119) {
-	print_line(level, "UFS2 file system, %s",
-		   get_ve_name(en));
+	print_line(level, "UFS2 file system, %dK offset, %s",
+		   at, get_ve_name(en));
       } else
 	continue;
 
@@ -152,6 +152,179 @@ void detect_ufs(SECTION *section, int level)
       s[468] = 0;
       if (s[0])
 	print_line(level + 1, "Last mounted at \"%s\"", s);
+    }
+  }
+}
+
+/*
+ * BSD disklabel
+ */
+
+static char * type_names[] = {
+  "Unused",
+  "swap",
+  "Sixth Edition",
+  "Seventh Edition",
+  "System V",
+  "V7 with 1K blocks",
+  "Eighth Edition, 4K blocks",
+  "4.2BSD fast file system",
+  "ext2 or MS-DOS",
+  "4.4BSD log-structured file system",
+  "\"Other\"",
+  "HPFS",
+  "ISO9660",
+  "bootstrap",
+  "AmigaDOS fast file system",
+  "Macintosh HFS",
+  "Digital Unix AdvFS",
+};
+
+static char * get_name_for_type(int type)
+{
+  if (type >= 0 && type <= 16)
+    return type_names[type];
+  return "Unknown";
+}
+
+void detect_bsd_disklabel(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int i, off, partcount, types[22], min_offset_valid;
+  u4 starts[22], sizes[22];
+  u4 sectsize, nsectors, ntracks, ncylinders, secpercyl, secperunit;
+  u8 offset, min_offset, base_offset;
+  char s[256], pn;
+  SECTION rs;
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  if (get_buffer(section, 512, 512, (void **)&buf) < 512)
+    return;
+
+  if (get_le_long(buf)       != 0x82564557 ||
+      get_le_long(buf + 132) != 0x82564557)
+    return;
+
+  sectsize = get_le_long(buf + 40);
+  nsectors = get_le_long(buf + 44);
+  ntracks = get_le_long(buf + 48);
+  ncylinders = get_le_long(buf + 52);
+  secpercyl = get_le_long(buf + 56);
+  secperunit = get_le_long(buf + 60);
+
+  partcount = get_le_short(buf + 138);
+
+  if (partcount <= 8) {
+    print_line(level, "BSD disklabel (at sector 1), %d partitions", partcount);
+  } else if (partcount > 8 && partcount <= 22) {
+    print_line(level, "BSD disklabel (at sector 1), %d partitions (more than usual, but valid)",
+	       partcount);
+  } else if (partcount > 22) {
+    print_line(level, "BSD disklabel (at sector 1), %d partitions (broken, limiting to 22)",
+	       partcount);
+    partcount = 22;
+  }
+  if (sectsize != 512) {
+    print_line(level + 1, "Unusual sector size %d bytes, your mileage may vary");
+  }
+
+  min_offset = 0;
+  min_offset_valid = 0;
+  for (i = 0, off = 148; i < partcount; i++, off += 16) {
+    starts[i] = get_le_long(buf + off + 4);
+    sizes[i] = get_le_long(buf + off);
+    types[i] = buf[off + 12];
+
+    if (types[i] != 0) {
+      offset = (u8)starts[i] * 512;
+      if (!min_offset_valid || offset < min_offset) {
+	min_offset = offset;
+	min_offset_valid = 1;
+      }
+    }
+  }
+  /* if min_offset_valid is still 0, the default of min_offset=0 is okay */
+
+  if (section->pos == min_offset) {
+    /* either min_offset is zero, or we were analyzing the whole disk */
+    base_offset = section->pos;
+  } else if (section->pos == 0) {
+    /* are we analyzing the slice alone? */
+    print_line(level + 1, "Adjusting offsets for disklabel in a DOS partition at sector %llu", min_offset >> 9);
+    base_offset = min_offset;
+  } else {
+    print_line(level + 1, "Warning: Unable to adjust offsets, your mileage may vary");
+    base_offset = section->pos;
+  }
+
+  for (i = 0; i < partcount; i++) {
+    pn = 'a' + i;
+    if (types[i] == 0) {
+      print_line(level, "Partition %c: unused", pn);
+      continue;
+    }
+
+    format_size(s, sizes[i], 512);
+    print_line(level, "Partition %c: %s (%lu sectors starting at %lu)",
+	       pn, s, sizes[i], starts[i]);
+
+    print_line(level + 1, "Type %d (%s)",
+	       types[i], get_name_for_type(types[i]));
+
+    offset = (u8)starts[i] * 512;
+    if (offset < base_offset) {
+      print_line(level + 1, "(Illegal start offset, no detection)");
+    } else if (offset == base_offset) {
+      print_line(level + 1, "Includes the disklabel and boot code");
+
+      /* recurse for content detection, but carefully */
+      rs.source = section->source;
+      rs.pos = offset - base_offset + section->pos;
+      rs.size = (u8)sizes[i] * 512;
+      rs.flags = section->flags | FLAG_IN_DISKLABEL;
+      detect(&rs, level + 1);
+    } else {
+      /* recurse for content detection */
+      rs.source = section->source;
+      rs.pos = offset - base_offset + section->pos;
+      rs.size = (u8)sizes[i] * 512;
+      rs.flags = section->flags;
+      detect(&rs, level + 1);
+    }
+  }
+
+  stop_detect();  /* don't run other detectors; we probably already
+		     did that for the first partition, which overlaps
+		     with the disklabel itself. */
+}
+
+/*
+ * FreeBSD boot loader (?)
+ */
+
+void detect_bsd_loader(SECTION *section, int level)
+{
+  unsigned char *buf;
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  if (get_buffer(section, 0, 512, (void **)&buf) == 512) {
+    if (get_le_short(buf + 0x1b0) == 0xbb66) {
+      print_line(level, "FreeBSD boot manager (i386 boot0 at sector 0)");
+    } else if (get_le_long(buf + 0x1f6) == 0 &&
+	       get_le_long(buf + 0x1fa) == 50000 &&
+	       get_le_short(buf + 0x1fe) == 0xaa55) {
+      print_line(level, "FreeBSD boot loader (i386 boot1 at sector 0)");
+    }
+  }
+
+  if (get_buffer(section, 1024, 512, (void **)&buf) == 512) {
+    if (memcmp(buf + 2, "BTX", 3) == 0) {
+      print_line(level, "FreeBSD boot loader (i386 boot2/BTX %d.%02d at sector 2)",
+		 (int)buf[5], (int)buf[6]);
     }
   }
 }

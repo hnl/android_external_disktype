@@ -111,6 +111,7 @@ void detect_amiga_partmap(SECTION *section, int level)
       rs.source = section->source;
       rs.pos = section->pos + start * 512;
       rs.size = size * 512;
+      rs.flags = section->flags;
       detect(&rs, level + 1);
     }
   }

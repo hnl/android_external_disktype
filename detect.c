@@ -58,11 +58,14 @@ void detect_linux_raid(SECTION *section, int level);
 void detect_linux_lvm(SECTION *section, int level);
 void detect_linux_swap(SECTION *section, int level);
 void detect_linux_misc(SECTION *section, int level);
+void detect_linux_loader(SECTION *section, int level);
 
 /* in unix.c */
 void detect_jfs(SECTION *section, int level);
 void detect_xfs(SECTION *section, int level);
 void detect_ufs(SECTION *section, int level);
+void detect_bsd_disklabel(SECTION *section, int level);
+void detect_bsd_loader(SECTION *section, int level);
 
 /* in compressed.c */
 void detect_compressed(SECTION *section, int level);
@@ -74,16 +77,22 @@ void detect_cdimage(SECTION *section, int level);
 void detect_archive(SECTION *section, int level);
 
 /*
- * general detectors
+ * list of detectors
  */
 
 DETECTOR detectors[] = {
+  /* boot code first */
+  detect_linux_loader,
+  detect_bsd_loader,
+  /* partition tables next */
+  detect_bsd_disklabel,
   detect_amiga_partmap,
-  detect_amiga_fs,
   detect_apple_partmap,
-  detect_apple_volume,
   detect_atari_partmap,
   detect_dos_partmap,
+  /* then the file systems */
+  detect_amiga_fs,
+  detect_apple_volume,
   detect_fat,
   detect_ntfs,
   detect_hpfs,
@@ -97,6 +106,7 @@ DETECTOR detectors[] = {
   detect_jfs,
   detect_xfs,
   detect_ufs,
+  /* file formats last */
   detect_archive,
   detect_compressed,
   detect_cdimage,
@@ -106,13 +116,25 @@ DETECTOR detectors[] = {
  * main recursive detection function
  */
 
+static int stop_flag = 0;
+
 void detect(SECTION *section, int level)
 {
   int i;
 
   /* run the modularized detectors */
-  for (i = 0; detectors[i]; i++)
+  for (i = 0; detectors[i] && !stop_flag; i++)
     (*detectors[i])(section, level);
+  stop_flag = 0;
+}
+
+/*
+ * break the detection loop
+ */
+
+void stop_detect(void)
+{
+  stop_flag = 1;
 }
 
 /* EOF */

@@ -215,6 +215,7 @@ void detect_dos_partmap(SECTION *section, int level)
       rs.source = section->source;
       rs.pos = section->pos + (u8)start * 512;
       rs.size = (u8)size * 512;
+      rs.flags = section->flags;
       detect(&rs, level + 1);
     }
   }
@@ -280,6 +281,7 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 	rs.source = section->source;
 	rs.pos = (tablebase + start) * 512;
 	rs.size = (u8)size * 512;
+	rs.flags = section->flags;
 	detect(&rs, level + 1);
       }
     }

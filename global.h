@@ -41,6 +41,10 @@
 #include <fcntl.h>
 
 
+/* constants */
+
+#define FLAG_IN_DISKLABEL (0x0001)
+
 /* types */
 
 typedef signed char s1;
@@ -68,6 +72,7 @@ typedef struct source {
 
 typedef struct section {
   u8 pos, size;
+  int flags;
   SOURCE *source;
 } SECTION;
 
@@ -77,6 +82,7 @@ typedef void (*DETECTOR)(SECTION *section, int level);
 /* detection dispatching function */
 
 void detect(SECTION *section, int level);
+void stop_detect(void);
 
 /* source and buffer functions */
 

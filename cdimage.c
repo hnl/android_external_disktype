@@ -85,6 +85,7 @@ void detect_cdimage(SECTION *section, int level)
   rs.source = s;
   rs.pos = 0;
   rs.size = s->size;
+  rs.flags = 0;
   detect(&rs, level);
 
   /* destroy wrapped source */
