@@ -84,18 +84,19 @@ void detect_archive(SECTION *section, int level);
  */
 
 DETECTOR detectors[] = {
-  /* image formats first */
-  detect_vhd,
-  /* boot code first */
+  /* 1: disk image formats */
+  detect_vhd,            /* may stop */
+  detect_cdimage,        /* may stop */
+  /* 2: boot code */
   detect_linux_loader,
   detect_bsd_loader,
-  /* partition tables next */
-  detect_bsd_disklabel,
+  /* 3: partition tables */
+  detect_bsd_disklabel,  /* may stop, recurses with FLAG_IN_DISKLABEL */
   detect_amiga_partmap,
   detect_apple_partmap,
   detect_atari_partmap,
   detect_dos_partmap,
-  /* then the file systems */
+  /* 4: file systems */
   detect_amiga_fs,
   detect_apple_volume,
   detect_fat,
@@ -111,10 +112,9 @@ DETECTOR detectors[] = {
   detect_jfs,
   detect_xfs,
   detect_ufs,
-  /* file formats last */
+  /* 5: file formats */
   detect_archive,
   detect_compressed,
-  detect_cdimage,
  NULL };
 
 /*
