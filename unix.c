@@ -50,8 +50,7 @@ void detect_jfs(SECTION *section, int level)
   version = get_le_long(buf + 4);
   print_line(level, "JFS file system, version %d", version);
 
-  memcpy(s, buf + 101, 11);
-  s[11] = 0;
+  get_string(buf + 101, 11, s);
   print_line(level + 1, "Volume name \"%s\"", s);
 
   blocksize = get_le_long(buf + 24);
@@ -85,8 +84,7 @@ void detect_xfs(SECTION *section, int level)
   version = raw_version & 0x000f;
   print_line(level, "XFS file system, version %d", version);
 
-  memcpy(s, buf + 0x6c, 12);
-  s[12] = 0;
+  get_string(buf + 0x6c, 12, s);
   print_line(level + 1, "Volume name \"%s\"", s);
 
   format_uuid(buf + 32, s);
@@ -142,14 +140,12 @@ void detect_ufs(SECTION *section, int level)
 	continue;
 
       /* volume name by FreeBSD convention */
-      memcpy(s, buf + 680, 32);
-      s[32] = 0;
+      get_string(buf + 680, 32, s);
       if (s[0])
 	print_line(level + 1, "Volume name \"%s\" (in superblock)", s);
 
       /* last mount point */
-      memcpy(s, buf + 212, 255);  /* actually longer, but varies */
-      s[255] = 0;
+      get_string(buf + 212, 255, s);  /* actually longer, but varies */
       if (s[0])
 	print_line(level + 1, "Last mounted at \"%s\"", s);
 
@@ -158,10 +154,7 @@ void detect_ufs(SECTION *section, int level)
 	if (get_ve_long(en, buf) == 0x4c41424c &&  /* "LABL" */
 	    get_ve_long(en, buf + 8) == 1) {       /* version 1 */
 	  namelen = get_ve_short(en, buf + 16);
-	  if (namelen > 255)
-	    namelen = 255;
-	  memcpy(s, buf + 18, namelen);
-	  s[namelen] = 0;
+	  get_string(buf + 18, namelen, s);  /* automatically limits to 255 */
 	  print_line(level + 1, "Volume name \"%s\" (in label v%lu)",
 		     s, get_ve_long(en, buf + 8));
 	}
@@ -333,10 +326,8 @@ void detect_bsd_disklabel(SECTION *section, int level)
   did_recurse = 0;
   for (i = 0; i < partcount; i++) {
     pn = 'a' + i;
-    if (types[i] == 0 && i != 2) {
-      print_line(level, "Partition %c: unused", pn);
+    if (types[i] == 0 && i != 2)
       continue;
-    }
 
     format_size(s, sizes[i], 512);
     print_line(level, "Partition %c: %s (%lu sectors starting at %lu)",
@@ -368,9 +359,8 @@ void detect_bsd_disklabel(SECTION *section, int level)
   }
 
   if (did_recurse)
-    stop_detect();  /* don't run other detectors; we probably already
-		       did that for the first partition, which overlaps
-		       with the disklabel itself. */
+    stop_detect();  /* don't run other detectors; we already did that
+		       for an overlapping partition. */
 }
 
 /*
@@ -400,6 +390,92 @@ void detect_bsd_loader(SECTION *section, int level)
 		 (int)buf[5], (int)buf[6]);
     }
   }
+}
+
+/*
+ * Solaris x86 vtoc
+ */
+
+void detect_solaris_vtoc(SECTION *section, int level)
+{
+  unsigned char *buf;
+  int i, off, partcount, sectorsize, types[16], did_recurse;
+  u4 starts[16], sizes[16];
+  u4 version;
+  u8 offset;
+  char s[256];
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  if (get_buffer(section, 512, 512, (void **)&buf) < 512)
+    return;
+
+  if (get_le_long(buf + 12) != 0x600DDEEE)
+    return;
+  version = get_le_long(buf + 16);
+  if (version != 1) {
+    print_line(level, "Solaris x86 disklabel, unknown version %lu", version);
+    return;
+  }
+  partcount = get_le_short(buf + 30);
+  if (partcount > 16) {
+    print_line(level, "Solaris x86 disklabel, version 1, %d partitions (limiting to 16)",
+	       partcount);
+    partcount = 16;
+  } else {
+    print_line(level, "Solaris x86 disklabel, version 1, %d partitions",
+	       partcount);
+  }
+
+  sectorsize = get_le_short(buf + 28);
+  if (sectorsize != 512)
+    print_line(level + 1, "Unusual sector size %d bytes, your mileage may vary",
+	       sectorsize);
+
+  get_string(buf + 20, 8, s);
+  if (s[0])
+    print_line(level + 1, "Volume name \"%s\"", s);
+
+  for (i = 0, off = 72; i < partcount; i++, off += 12) {
+    types[i] = get_le_short(buf + off);
+    starts[i] = get_le_long(buf + off + 4);
+    sizes[i] = get_le_long(buf + off + 8);
+  }
+
+  /* loop over partitions: print and analyze */
+  did_recurse = 0;
+  for (i = 0; i < partcount; i++) {
+    if (sizes[i] == 0)
+      continue;
+
+    format_size(s, sizes[i], 512);
+    print_line(level, "Partition %d: %s (%lu sectors starting at %lu)",
+	       i, s, sizes[i], starts[i]);
+
+    print_line(level + 1, "Type %d",
+	       types[i]);
+
+    offset = (u8)starts[i] * 512;
+    if (offset == 0) {
+      print_line(level + 1, "Includes the disklabel");
+
+      /* recurse for content detection, but carefully */
+      analyze_recursive(section, level + 1,
+			offset, (u8)sizes[i] * 512,
+			FLAG_IN_DISKLABEL);
+      did_recurse = 1;
+    } else {
+      /* recurse for content detection */
+      analyze_recursive(section, level + 1,
+			offset, (u8)sizes[i] * 512,
+			0);
+    }
+  }
+
+  if (did_recurse)
+    stop_detect();  /* don't run other detectors; we already did that
+		       for an overlapping partition. */
 }
 
 /*

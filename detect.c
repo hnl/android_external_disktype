@@ -68,6 +68,7 @@ void detect_ufs(SECTION *section, int level);
 void detect_sysv(SECTION *section, int level);
 void detect_bsd_disklabel(SECTION *section, int level);
 void detect_bsd_loader(SECTION *section, int level);
+void detect_solaris_vtoc(SECTION *section, int level);
 void detect_qnx(SECTION *section, int level);
 
 /* in beos.c */
@@ -99,6 +100,7 @@ DETECTOR detectors[] = {
   detect_bsd_loader,
   /* 3: partition tables */
   detect_bsd_disklabel,  /* may stop, recurses with FLAG_IN_DISKLABEL */
+  detect_solaris_vtoc,
   detect_amiga_partmap,
   detect_apple_partmap,
   detect_atari_partmap,
