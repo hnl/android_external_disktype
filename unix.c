@@ -211,7 +211,6 @@ void detect_bsd_disklabel(SECTION *section, int level)
   u4 sectsize, nsectors, ntracks, ncylinders, secpercyl, secperunit;
   u8 offset, min_offset, base_offset;
   char s[256], pn;
-  SECTION rs;
 
   if (section->flags & FLAG_IN_DISKLABEL)
     return;
@@ -299,18 +298,14 @@ void detect_bsd_disklabel(SECTION *section, int level)
       print_line(level + 1, "Includes the disklabel and boot code");
 
       /* recurse for content detection, but carefully */
-      rs.source = section->source;
-      rs.pos = offset - base_offset + section->pos;
-      rs.size = (u8)sizes[i] * 512;
-      rs.flags = section->flags | FLAG_IN_DISKLABEL;
-      detect(&rs, level + 1);
+      analyze_recursive(section, level + 1,
+			offset - base_offset, (u8)sizes[i] * 512,
+			FLAG_IN_DISKLABEL);
     } else {
       /* recurse for content detection */
-      rs.source = section->source;
-      rs.pos = offset - base_offset + section->pos;
-      rs.size = (u8)sizes[i] * 512;
-      rs.flags = section->flags;
-      detect(&rs, level + 1);
+      analyze_recursive(section, level + 1,
+			offset - base_offset, (u8)sizes[i] * 512,
+			0);
     }
   }
 

@@ -37,7 +37,6 @@ void detect_apple_partmap(SECTION *section, int level)
   char s[256];
   unsigned char *buf;
   u8 start, size;
-  SECTION rs;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -90,12 +89,9 @@ void detect_apple_partmap(SECTION *section, int level)
     print_line(level+1, "Type \"%s\"", s);
 
     /* recurse for content detection */
-    if (start > count) {  /* avoid recursion on self */
-      rs.source = section->source;
-      rs.pos = section->pos + start * 512;
-      rs.size = size * 512;
-      rs.flags = section->flags;
-      detect(&rs, level + 1);
+    if (start > count && size > 0) {  /* avoid recursion on self */
+      analyze_recursive(section, level + 1,
+			start * 512, size * 512, 0);
     }
   }
 }
@@ -111,7 +107,6 @@ void detect_apple_volume(SECTION *section, int level)
   u2 magic, version;
   u4 blocksize, blockstart;
   u8 blockcount, offset;
-  SECTION rs;
 
   if (get_buffer(section, 1024, 512, (void **)&buf) < 512)
     return;
@@ -141,12 +136,10 @@ void detect_apple_volume(SECTION *section, int level)
 
       offset = (u8)get_be_short(buf + 0x7e) * blocksize +
 	(u8)blockstart * 512;
+      /* TODO: size */
 
-      rs.source = section->source;
-      rs.pos = section->pos + offset;
-      rs.size = 0;  /* TODO */
-      rs.flags = section->flags;
-      detect(&rs, level + 1);
+      analyze_recursive(section, level + 1,
+			offset, 0, 0);
     }
 
   } else if (magic == 0x482B) {

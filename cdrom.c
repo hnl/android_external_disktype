@@ -180,12 +180,9 @@ static void dump_boot_catalog(SECTION *section, u8 pos, int level)
 	     bootable ? "Bootable" : "Non-bootable",
 	     media_types[media], start, s);
   if (start > 0) {
-    SECTION rs;
-    rs.source = section->source;
-    rs.pos = (u8)start * 2048;
-    rs.size = 0;
-    rs.flags = section->flags;
-    detect(&rs, level + 1);
+    analyze_recursive(section, level + 1,
+		      (u8)start * 2048, 0, 0);
+    /* TODO: calculate size in some way */
   }
 
   if (more)

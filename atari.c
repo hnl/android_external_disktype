@@ -52,7 +52,6 @@ void detect_atari_partmap(SECTION *section, int level)
   char types[4][4], *type;
   u2 atari_csum;
   char s[256];
-  SECTION rs;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -107,11 +106,8 @@ void detect_atari_partmap(SECTION *section, int level)
       detect_atari_partmap_ext(section, start, level + 1);
     } else {
       /* recurse for content detection */
-      rs.source = section->source;
-      rs.pos = section->pos + (u8)start * 512;
-      rs.size = (u8)size * 512;
-      rs.flags = section->flags;
-      detect(&rs, level + 1);
+      analyze_recursive(section, level + 1,
+			(u8)start * 512, (u8)size * 512, 0);
     }
   }
 }
@@ -125,7 +121,6 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
   u4 start, size, starts[4], sizes[4];
   char types[4][4], *type;
   char s[256];
-  SECTION rs;
 
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
     /* read sector from linked list */
@@ -167,11 +162,8 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
 		   get_name_for_type(type));
 
 	/* recurse for content detection */
-	rs.source = section->source;
-	rs.pos = section->pos + (tablebase + start) * 512;
-	rs.size = (u8)size * 512;
-	rs.flags = section->flags;
-	detect(&rs, level + 1);
+	analyze_recursive(section, level + 1,
+			  (tablebase + start) * 512, (u8)size * 512, 0);
       }
     }
   }

@@ -157,7 +157,6 @@ void detect_dos_partmap(SECTION *section, int level)
   u4 start, size, starts[4], sizes[4];
   int extpartnum = 5;
   char s[256];
-  SECTION rs;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -212,11 +211,8 @@ void detect_dos_partmap(SECTION *section, int level)
       detect_dos_partmap_ext(section, start, level + 1, &extpartnum);
     } else {
       /* recurse for content detection */
-      rs.source = section->source;
-      rs.pos = section->pos + (u8)start * 512;
-      rs.size = (u8)size * 512;
-      rs.flags = section->flags;
-      detect(&rs, level + 1);
+      analyze_recursive(section, level + 1,
+			(u8)start * 512, (u8)size * 512, 0);
     }
   }
 }
@@ -229,7 +225,6 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
   int i, off, type, types[4];
   u4 start, size, starts[4], sizes[4];
   char s[256];
-  SECTION rs;
 
   for (tablebase = extbase; tablebase; tablebase = nexttablebase) {
     /* read sector from linked list */
@@ -278,11 +273,8 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
 
 	/* recurse for content detection */
-	rs.source = section->source;
-	rs.pos = (tablebase + start) * 512;
-	rs.size = (u8)size * 512;
-	rs.flags = section->flags;
-	detect(&rs, level + 1);
+	analyze_recursive(section, level + 1,
+			  (tablebase + start) * 512, (u8)size * 512, 0);
       }
     }
   }

@@ -38,7 +38,6 @@ void detect_amiga_partmap(SECTION *section, int level)
   char s[256];
   u4 blocksize, part_ptr;
   u8 cylsize, start, size;
-  SECTION rs;
 
   for (off = 0, found = 0; off < 16; off++) {
     if (get_buffer(section, off * 512, 512, (void **)&buf) < 512)
@@ -107,12 +106,9 @@ void detect_amiga_partmap(SECTION *section, int level)
     */
 
     /* detect contents */
-    if (size > 0) {
-      rs.source = section->source;
-      rs.pos = section->pos + start * 512;
-      rs.size = size * 512;
-      rs.flags = section->flags;
-      detect(&rs, level + 1);
+    if (size > 0 && start > 0) {
+      analyze_recursive(section, level + 1,
+			start * 512, size * 512, 0);
     }
   }
 }

@@ -77,7 +77,6 @@ static void analyze_file(const char *filename)
   struct stat sb;
   char *reason;
   SOURCE *s;
-  SECTION section;
 
   print_line(0, "--- %s", filename);
 
@@ -146,11 +145,7 @@ static void analyze_file(const char *filename)
     print_kind(filekind, s->size);
 
   /* now analyze it */
-  section.source = s;
-  section.pos = 0;
-  section.size = s->size;
-  section.flags = 0;
-  detect(&section, 0);
+  analyze_source(s, 0);
 
   /* finish it up */
   close_source(s);

@@ -75,8 +75,7 @@ SOURCE *init_file_source(int fd, int filekind)
     bailout("Out of memory");
   memset(fs, 0, sizeof(FILE_SOURCE));
 
-  fs->c.sequential = 0;
-  fs->c.read = read_file;
+  fs->c.read_bytes = read_file;
   fs->c.close = close_file;
   fs->fd = fd;
 
@@ -89,13 +88,15 @@ SOURCE *init_file_source(int fd, int filekind)
    * lseek() to the end:
    * Works on files. On some systems (Linux), this also works on devices.
    */
-  if (fs->c.size == 0) {
+  if (!fs->c.size_known) {
     result = lseek(fd, 0, SEEK_END);
 #if DEBUG_SIZE
     printf("Size: lseek returned %lld\n", result);
 #endif
-    if (result > 0)
+    if (result > 0) {
+      fs->c.size_known = 1;
       fs->c.size = result;
+    }
   }
 
 #ifdef USE_IOCTL_LINUX
@@ -105,9 +106,10 @@ SOURCE *init_file_source(int fd, int filekind)
    */
 #ifdef BLKGETSIZE64
 #define u64 __u64   /* workaround for broken header file */
-  if (fs->c.size == 0 && filekind != 0) {
+  if (!fs->c.size_known && filekind != 0) {
     u8 devsize;
     if (ioctl(fd, BLKGETSIZE64, (void *)&devsize) >= 0) {
+      fs->c.size_known = 1;
       fs->c.size = devsize;
 #if DEBUG_SIZE
       printf("Size: Linux 64-bit ioctl reports %llu\n", fs->c.size);
@@ -117,9 +119,10 @@ SOURCE *init_file_source(int fd, int filekind)
 #undef u64
 #endif
 
-  if (fs->c.size == 0 && filekind != 0) {
+  if (!fs->c.size_known && filekind != 0) {
     u4 blockcount;
     if (ioctl(fd, BLKGETSIZE, (void *)&blockcount) >= 0) {
+      fs->c.size_known = 1;
       fs->c.size = (u8)blockcount * 512;
 #if DEBUG_SIZE
       printf("Size: Linux 32-bit ioctl reports %llu (%lu blocks)\n",
@@ -134,9 +137,10 @@ SOURCE *init_file_source(int fd, int filekind)
    * ioctl, FreeBSD style:
    * Works on partitioned hard disks or somthing like that.
    */
-  if (fs->c.size == 0 && filekind != 0) {
+  if (!fs->c.size_known && filekind != 0) {
     struct disklabel dl;
     if (ioctl(fd, DIOCGDINFO, &dl) >= 0) {
+      fs->c.size_known = 1;
       fs->c.size = (u8) dl.d_ncylinders * dl.d_secpercyl * dl.d_secsize;
       /* TODO: check this, it's the whole disk size... */
 #if DEBUG_SIZE
@@ -151,11 +155,12 @@ SOURCE *init_file_source(int fd, int filekind)
    * ioctl, Darwin style:
    * Works on certain devices.
    */
-  if (fs->c.size == 0 && filekind != 0) {
+  if (!fs->c.size_known && filekind != 0) {
     u4 blocksize;
     u8 blockcount;
     if (ioctl(fd, DKIOCGETBLOCKSIZE, (void *)&blocksize) >= 0) {
       if (ioctl(fd, DKIOCGETBLOCKCOUNT, (void *)&blockcount) >= 0) {
+	fs->c.size_known = 1;
         fs->c.size = blockcount * blocksize;
 #if DEBUG_SIZE
 	printf("Size: Darwin ioctl reports %llu (%llu blocks of %lu bytes)\n",
@@ -170,7 +175,7 @@ SOURCE *init_file_source(int fd, int filekind)
    * binary search:
    * Works on anything that can seek, but is quite expensive.
    */
-  if (fs->c.size == 0) {
+  if (!fs->c.size_known) {
     u8 lower, upper, current;
 
     /* TODO: check that the target can seek at all */
@@ -195,6 +200,7 @@ SOURCE *init_file_source(int fd, int filekind)
       else
 	upper = current;
     }
+    fs->c.size_known = 1;
     fs->c.size = lower + 1;
 
 #if DEBUG_SIZE

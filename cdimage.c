@@ -56,7 +56,6 @@ void detect_cdimage(SECTION *section, int level)
   int mode, off;
   unsigned char *buf;
   SOURCE *s;
-  SECTION rs;
 
   if (get_buffer(section, 0, 2352, (void **)&buf) < 2352)
     return;
@@ -78,17 +77,9 @@ void detect_cdimage(SECTION *section, int level)
   } else
     return;
 
-  /* create wrapped source */
+  /* create and analyze wrapped source */
   s = init_cdimage_source(section->source, section->pos + off);
-
-  /* analyze it */
-  rs.source = s;
-  rs.pos = 0;
-  rs.size = s->size;
-  rs.flags = 0;
-  detect(&rs, level);
-
-  /* destroy wrapped source */
+  analyze_source(s, level);
   close_source(s);
 
   /* don't run other analyzers */
@@ -108,8 +99,11 @@ static SOURCE *init_cdimage_source(SOURCE *foundation, u8 offset)
     bailout("Out of memory");
   memset(src, 0, sizeof(CDIMAGE_SOURCE));
 
-  src->c.size = ((foundation->size - offset + 304) / 2352) * 2048;
-  src->c.sequential = 0;
+  if (foundation->size_known) {
+    src->c.size_known = 1;
+    src->c.size = ((foundation->size - offset + 304) / 2352) * 2048;
+    /* TODO: pass the size in from the SECTION record and use it */
+  }
   src->c.blocksize = 2048;
   src->c.foundation = foundation;
   src->c.read_block = read_block_cdimage;
@@ -127,15 +121,13 @@ static int read_block_cdimage(SOURCE *s, u8 pos, void *buf)
 {
   SOURCE *fs = s->foundation;
   u8 filepos;
-  void *filebuf;
 
   /* translate position */
   filepos = (pos / 2048) * 2352 + ((CDIMAGE_SOURCE *)s)->off;
 
   /* read from lower layer */
-  if (get_buffer_real(fs, filepos, 2048, &filebuf) < 2048)
+  if (get_buffer_real(fs, filepos, 2048, buf, NULL) < 2048)
     return 0;
-  memcpy(buf, filebuf, 2048);
 
   return 1;
 }

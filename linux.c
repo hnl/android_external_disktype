@@ -215,7 +215,6 @@ void detect_linux_lvm(SECTION *section, int level)
   unsigned char *buf;
   char s[256], t[256];
   u8 pe_size, pe_count, pe_start;
-  SECTION rs;
 
   if (get_buffer(section, 0, 1024, (void **)&buf) < 1024)
     return;
@@ -253,11 +252,9 @@ void detect_linux_lvm(SECTION *section, int level)
 
   /* try to detect from first PE */
   if (pe_start > 0) {
-    rs.source = section->source;
-    rs.pos = section->pos + pe_start;
-    rs.size = 0;
-    rs.flags = section->flags;
-    detect(&rs, level + 1);
+    analyze_recursive(section, level + 1,
+		      pe_start, 0, 0);
+    /* TODO: elaborate on this by reading the PE allocation map */
   }
 }
 

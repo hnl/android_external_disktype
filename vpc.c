@@ -66,7 +66,6 @@ void detect_vhd(SECTION *section, int level)
   u8 sparse_offset, total_size;
   char s[256];
   SOURCE *src;
-  SECTION rs;
 
   found = 0;
 
@@ -114,13 +113,7 @@ void detect_vhd(SECTION *section, int level)
 
     if (src != NULL) {
       /* analyze it */
-      rs.source = src;
-      rs.pos = 0;
-      rs.size = src->size;
-      rs.flags = 0;
-      detect(&rs, level);
-
-      /* destroy wrapped source */
+      analyze_source(src, level);
       close_source(src);
     }
   }
@@ -148,8 +141,8 @@ static SOURCE *init_vhd_source(SECTION *section, int level,
     bailout("Out of memory");
   memset(vs, 0, sizeof(VHD_SOURCE));
 
+  vs->c.size_known = 1;
   vs->c.size = total_size;
-  vs->c.sequential = 0;
   vs->c.blocksize = 512;
   vs->c.foundation = section->source;
   vs->c.read_block = read_block_vhd;
@@ -196,11 +189,11 @@ static SOURCE *init_vhd_source(SECTION *section, int level,
   memset(vs->chunks, 0, vs->chunk_count * sizeof(VHD_CHUNK *));
 
   /* read the chunk map */
-  if (get_buffer(section, map_offset, map_size, (void **)&buf) < map_size) {
+  if (get_buffer_real(section->source, vs->off + map_offset, map_size,
+		      (void *)vs->raw_map, NULL) < map_size) {
     print_line(level + 1, "Error reading the sparse image map");
     goto errorexit;
   }
-  memcpy(vs->raw_map, buf, map_size);
 
   return (SOURCE *)vs;
 
@@ -224,6 +217,8 @@ static int read_block_vhd(SOURCE *s, u8 pos, void *buf)
   int present;
 
   chunk = (u4)(pos / vs->chunk_size);
+  if (chunk >= vs->chunk_count)
+    return 0;
 
   if (vs->chunks[chunk] == NULL) {
     /* create data structure for the chunk */
@@ -235,7 +230,8 @@ static int read_block_vhd(SOURCE *s, u8 pos, void *buf)
       present = 0;
     } else {
       chunk_disk_off = vs->off + (u8)chunk_start_sector * 512;
-      if (get_buffer_real(fs, chunk_disk_off, 512, (void **)&filebuf) < 512)
+      if (get_buffer_real(fs, chunk_disk_off, 512,
+			  NULL, (void **)&filebuf) < 512)
 	present = 0;
       else
 	present = 1;
@@ -266,9 +262,8 @@ static int read_block_vhd(SOURCE *s, u8 pos, void *buf)
   if (vs->chunks[chunk]->bitmap[sector >> 3] & (128 >> (sector & 7))) {
     /* sector is present and in use */
     sector_pos = vs->chunks[chunk]->off + (u8)sector * 512;
-    if (get_buffer_real(fs, sector_pos, 512, (void **)&filebuf) < 512)
+    if (get_buffer_real(fs, sector_pos, 512, buf, NULL) < 512)
       return 0;
-    memcpy(buf, filebuf, 512);
   } else {
     /* sector has not been written to (although it's present on disk) */
     memset(buf, 0, 512);

@@ -58,6 +58,7 @@ typedef unsigned long long int u8;
 
 typedef struct source {
   u8 size;
+  int size_known;
   void *cache_head;
 
   int sequential;
@@ -65,7 +66,7 @@ typedef struct source {
   int blocksize;
   struct source *foundation;
 
-  u8 (*read)(struct source *s, u8 pos, u8 len, void *buf);
+  u8 (*read_bytes)(struct source *s, u8 pos, u8 len, void *buf);
   int (*read_block)(struct source *s, u8 pos, void *buf);
   void (*close)(struct source *s);
 
@@ -83,7 +84,9 @@ typedef void (*DETECTOR)(SECTION *section, int level);
 
 /* detection dispatching function */
 
-void detect(SECTION *section, int level);
+void analyze_source(SOURCE *s, int level);
+void analyze_recursive(SECTION *section, int level,
+		       u8 rel_pos, u8 size, int flags);
 void stop_detect(void);
 
 /* source and buffer functions */
@@ -91,7 +94,7 @@ void stop_detect(void);
 SOURCE *init_file_source(int fd, int filekind);
 
 u8 get_buffer(SECTION *section, u8 pos, u8 len, void **buf);
-u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf);
+u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void *inbuf, void **outbuf);
 void close_source(SOURCE *s);
 
 /* output functions */

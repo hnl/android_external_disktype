@@ -110,7 +110,6 @@ static void handle_compressed(SECTION *section, int level,
 			      int off, const char *program)
 {
   SOURCE *s;
-  SECTION rs;
   u8 size;
 
   /* create decompression data source */
@@ -119,15 +118,7 @@ static void handle_compressed(SECTION *section, int level,
     size -= off;
   s = init_compressed_source(section->source,
 			     section->pos + off, size, program);
-
-  /* analyze it */
-  rs.source = s;
-  rs.pos = 0;
-  rs.size = s->size;
-  rs.flags = 0;
-  detect(&rs, level+1);
-
-  /* destroy wrapped source */
+  analyze_source(s, level + 1);
   close_source(s);
 }
 
@@ -146,12 +137,12 @@ static SOURCE *init_compressed_source(SOURCE *foundation, u8 offset, u8 size,
     bailout("Out of memory");
   memset(cs, 0, sizeof(COMPRESSED_SOURCE));
 
-  cs->c.size = 0;  /* not known in advance */
   cs->c.sequential = 1;
   cs->c.seq_pos = 0;
   cs->c.foundation = foundation;
-  cs->c.read = read_compressed;
+  cs->c.read_bytes = read_compressed;
   cs->c.close = close_compressed;
+  /* size is not known in advance by definition */
 
   cs->offset = offset;
   cs->write_pos = 0;
@@ -235,6 +226,7 @@ static u8 read_compressed(SOURCE *s, u8 pos, u8 len, void *buf)
 #endif
     if (result == 0) {  /* end of file */
       /* remember size for buffer layer */
+      s->size_known = 1;
       s->size = s->seq_pos + got;
       /* close pipe (stops future read attempts in the track) */
       close(cs->read_pipe);
@@ -285,8 +277,8 @@ static u8 read_compressed(SOURCE *s, u8 pos, u8 len, void *buf)
     }
 
     /* get data from lower layer */
-    fill = get_buffer_real(fs, cs->offset + cs->write_pos,
-			   askfor, (void **)&filebuf);
+    fill = get_buffer_real(fs, cs->offset + cs->write_pos, askfor,
+			   NULL, (void **)&filebuf);
 #if DEBUG
     printf("rc get_buffer asked for pos %llu len %d got %llu\n",
 	   cs->offset + cs->write_pos, askfor, fill);

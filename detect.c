@@ -116,16 +116,64 @@ DETECTOR detectors[] = {
   detect_ufs,
   /* 5: file formats */
   detect_archive,
-  detect_compressed,
+  detect_compressed,  /* this is here because of boot disks */
  NULL };
 
+
 /*
- * main recursive detection function
+ * internal stuff
  */
+
+static void detect(SECTION *section, int level);
 
 static int stop_flag = 0;
 
-void detect(SECTION *section, int level)
+/*
+ * analyze a given source
+ */
+
+void analyze_source(SOURCE *s, int level)
+{
+  SECTION section;
+
+  section.source = s;
+  section.pos = 0;
+  section.size = s->size_known ? s->size : 0;
+  section.flags = 0;
+
+  detect(&section, level);
+}
+
+/*
+ * recursively analyze a portion of a SECTION
+ */
+
+void analyze_recursive(SECTION *section, int level,
+                       u8 rel_pos, u8 size, int flags)
+{
+  SOURCE *s;
+  SECTION rs;
+
+  /* sanity */
+  if (rel_pos == 0 && (flags & FLAG_IN_DISKLABEL) == 0)
+    return;
+  s = section->source;
+  if (s->size_known && (section->pos + rel_pos >= s->size))
+    return;
+
+  rs.source = s;
+  rs.pos = section->pos + rel_pos;
+  rs.size = size;
+  rs.flags = section->flags | flags;
+
+  detect(&rs, level);
+}
+
+/*
+ * detection dispatching
+ */
+
+static void detect(SECTION *section, int level)
 {
   int i;
 
