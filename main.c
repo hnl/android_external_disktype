@@ -36,7 +36,7 @@
  */
 
 static void analyze_file(const char *filename);
-static void print_kind(int filekind, u8 filesize);
+static void print_kind(int filekind, u8 size, int size_known);
 
 #ifdef USE_MACOS_TYPE
 static void show_macos_type(const char *filename);
@@ -91,7 +91,7 @@ static void analyze_file(const char *filename)
   reason = NULL;
   if (S_ISREG(sb.st_mode)) {
     filesize = sb.st_size;
-    print_kind(filekind, filesize);
+    print_kind(filekind, filesize, 1);
   } else if (S_ISBLK(sb.st_mode))
     filekind = 1;
   else if (S_ISCHR(sb.st_mode))
@@ -142,7 +142,7 @@ static void analyze_file(const char *filename)
 
   /* tell the user what it is */
   if (filekind != 0)
-    print_kind(filekind, s->size);
+    print_kind(filekind, s->size, s->size_known);
 
   /* now analyze it */
   analyze_source(s, 0);
@@ -151,7 +151,7 @@ static void analyze_file(const char *filename)
   close_source(s);
 }
 
-static void print_kind(int filekind, u8 filesize)
+static void print_kind(int filekind, u8 size, int size_known)
 {
   char buf[256], *kindname;
 
@@ -164,9 +164,9 @@ static void print_kind(int filekind, u8 filesize)
   else
     kindname = "Unknown kind";
 
-  if (filesize > 0 || filekind == 0) {
-    format_size(buf, filesize, 1);
-    print_line(0, "%s, size %llu bytes (%s)", kindname, filesize, buf);
+  if (size_known) {
+    format_size(buf, size, 1);
+    print_line(0, "%s, size %llu bytes (%s)", kindname, size, buf);
   } else {
     print_line(0, "%s, unknown size", kindname);
   }
