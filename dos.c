@@ -88,6 +88,7 @@ struct systypes i386_sys_types[] = {
   { 0x65, "Novell Netware 386" },
   { 0x70, "DiskSecure Multi-Boot" },
   { 0x75, "PC/IX" },
+  { 0x78, "XOSL" },
   { 0x80, "Old Minix" },
   { 0x81, "Minix / old Linux" },
   { 0x82, "Linux swap / Solaris" },
