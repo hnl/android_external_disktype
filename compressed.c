@@ -26,6 +26,7 @@
  */
 
 #include "global.h"
+#include <sys/wait.h>
 
 #define DEBUG 0
 

@@ -5,7 +5,8 @@
 RM = rm -f
 CC = gcc
 
-OBJS   = main.o buffer.o file.o cdimage.o compressed.o \
+OBJS   = main.o lib.o \
+         buffer.o file.o cdimage.o compressed.o \
          detect.o apple.o dos.o cdrom.o unix.o archives.o
 TARGET = disktype
 
