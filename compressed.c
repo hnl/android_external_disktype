@@ -34,6 +34,7 @@
 
 #ifndef FD_ZERO
 #define DECOMPRESS 0
+#warning Transparent decompression disabled, select() macros not defined
 #else
 #define DECOMPRESS 1
 #endif
