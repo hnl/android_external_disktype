@@ -139,8 +139,8 @@ static void analyze_file(const char *filename)
   detect(&section, 0);
 
   /* finish it up */
-  print_line(0, "");
   close_source(s);
+  print_line(0, "");
 }
 
 /*
