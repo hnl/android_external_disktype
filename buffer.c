@@ -27,6 +27,8 @@
 
 #include "global.h"
 
+#define PROFILE 0
+
 /*
  * constants
  */
@@ -136,6 +138,10 @@ u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf)
     return len;
 
   } else {
+
+#if PROFILE
+    printf("Temporary buffer for request %llu:%llu\n", pos, len);
+#endif
 
     /* allocate temp buffer */
     cache->tempbuf = malloc(last_chunk - first_chunk + CHUNKSIZE);
@@ -280,19 +286,37 @@ void close_source(SOURCE *s)
   /* drop the cache */
   cache = (CACHE *)s->cache_head;
   if (cache != NULL) {
+#if PROFILE
+    printf("Cache profile:\n");
+#endif
     if (cache->tempbuf != NULL)
       free(cache->tempbuf);
     for (hpos = 0; hpos < HASHSIZE; hpos++) {
+#if PROFILE
+      printf(" hash position %d:", hpos);
+#endif
       chain = cache->hashtab[hpos];
       if (chain != NULL) {
 	trav = chain;
 	do {
+#if PROFILE
+	  printf(" %lluK", trav->start >> 10);
+	  if (trav->len != CHUNKSIZE)
+	    printf(":%llu", trav->len);
+#endif
 	  nexttrav = trav->next;
 	  free(trav->buf);
 	  free(trav);
 	  trav = nexttrav;
 	} while (trav != chain);
+#if PROFILE
+	printf("\n");
+#endif
       }
+#if PROFILE
+      else
+	printf(" empty\n");
+#endif
     }
   }
 
