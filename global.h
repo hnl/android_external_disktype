@@ -80,7 +80,7 @@ void detect(SECTION *section, int level);
 
 /* source and buffer functions */
 
-SOURCE *init_file_source(int fd);
+SOURCE *init_file_source(int fd, int filekind);
 
 u8 get_buffer(SECTION *section, u8 pos, u8 len, void **buf);
 u8 get_buffer_real(SOURCE *s, u8 pos, u8 len, void **buf);

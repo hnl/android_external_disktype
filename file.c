@@ -47,7 +47,7 @@ static void close_file(SOURCE *s);
  * initialize the file source
  */
 
-SOURCE *init_file_source(int fd)
+SOURCE *init_file_source(int fd, int filekind)
 {
   FILE_SOURCE *fs;
   off_t result;
@@ -62,11 +62,13 @@ SOURCE *init_file_source(int fd)
   fs->c.close = close_file;
   fs->fd = fd;
 
-  result = lseek(fd, 0, SEEK_END);
-  if (result > 0)
-    fs->c.size = result;
-  else if (result < 0)
-    errore("Can't determine file size");
+  if (fs->c.size == 0) {
+    result = lseek(fd, 0, SEEK_END);
+    if (result > 0)
+      fs->c.size = result;
+    else if (result < 0)
+      errore("Can't determine file size");
+  }
 
   return (SOURCE *)fs;
 }

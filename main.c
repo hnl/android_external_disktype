@@ -129,7 +129,7 @@ static void analyze_file(const char *filename)
   }
 
   /* create a source */
-  s = init_file_source(fd);
+  s = init_file_source(fd, filekind);
 
   /* tell the user what it is */
   if (filekind != 0)
