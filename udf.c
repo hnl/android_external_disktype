@@ -51,7 +51,7 @@ void detect_udf(SECTION *section, int level)
   int recog_state, sector;
   int detected = 0;
   int probe_result;
-  int sizes[] = { 512, 2048, -1 };
+  int sizes[] = { 2048, 512, 1024, 4096, -1 };
   int i;
 
   /* check the Volume Recognition Area (shared with ISO9660) */
@@ -84,7 +84,7 @@ void detect_udf(SECTION *section, int level)
     places). Unfortunately, the sector size may vary, and it isn't
     recorded anywhere. The base standard allows any multiple of
     512 bytes, but the various UDF standards restrict this. For now,
-    we check the common sizes 512 and 2048, and give up else.
+    we check the common sizes 512, 1K, 2K, and 4K, and give up else.
   */
 
   for (i = 0; sizes[i] > 0; i++) {
