@@ -114,7 +114,7 @@ static void detect_atari_partmap_ext(SECTION *section, u8 extbase, int level)
   unsigned char *buf;
   int extpartnum = 5;
   u8 tablebase, nexttablebase;
-  int i, off, flags[i];
+  int i, off, flags[4];
   u4 start, size, starts[4], sizes[4];
   char types[4][4], *type;
   char s[256];
