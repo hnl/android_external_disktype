@@ -36,7 +36,7 @@ void detect_apple_partmap(SECTION *section, int level)
   int i, magic, count;
   char s[256];
   unsigned char *buf;
-  int8 start, size;
+  u8 start, size;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -80,7 +80,7 @@ void detect_apple_partmap(SECTION *section, int level)
     start = get_be_long(buf + 8);
     size = get_be_long(buf + 12);
     format_size(s, size, 512);
-    print_line(level, "Partition %d: %s (%lld sectors starting at %lld)",
+    print_line(level, "Partition %d: %s (%llu sectors starting at %llu)",
 	       i, s, size, start);
 
     /* get type */
@@ -92,8 +92,8 @@ void detect_apple_partmap(SECTION *section, int level)
     if (start > count) {  /* avoid recursion on self */
       SECTION rs;
       rs.source = section->source;
-      rs.pos = section->pos + (u8)start * 512;
-      rs.size = (u8)size * 512;
+      rs.pos = section->pos + start * 512;
+      rs.size = size * 512;
       detect(&rs, level + 1);
     }
   }
@@ -107,9 +107,9 @@ void detect_apple_volume(SECTION *section, int level)
 {
   char s[256], t[256];
   unsigned char *buf;
-  unsigned int magic, version;
-  int blocksize, blockstart;
-  int8 blockcount;
+  u2 magic, version;
+  u4 blocksize, blockstart;
+  u8 blockcount;
 
   if (get_buffer(section, 1024, 512, (void **)&buf) < 512)
     return;
@@ -131,12 +131,13 @@ void detect_apple_volume(SECTION *section, int level)
     print_line(level + 1, "Volume name \"%s\"", t);
 
     format_size(s, blockcount, blocksize);
-    print_line(level + 1, "Volume size %s (%lld blocks of %d bytes)",
+    print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
 	       s, blockcount, blocksize);
 
     if (get_be_short(buf + 0x7c) == 0x482B) {
       SECTION rs;
-      int8 offset = get_be_short(buf + 0x7e) * blocksize + blockstart * 512;
+      u8 offset = (u8)get_be_short(buf + 0x7e) * blocksize +
+	(u8)blockstart * 512;
       print_line(level, "HFS wrapper for HFS Plus");
 
       rs.source = section->source;
@@ -152,7 +153,7 @@ void detect_apple_volume(SECTION *section, int level)
     blockcount = get_be_long(buf + 44);
 
     format_size(s, blockcount, blocksize);
-    print_line(level + 1, "Volume size %s (%lld blocks of %d bytes)",
+    print_line(level + 1, "Volume size %s (%llu blocks of %lu bytes)",
 	       s, blockcount, blocksize);
 
     /* TODO: is there a volume name somewhere? */
