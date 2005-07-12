@@ -106,6 +106,7 @@ struct systypes i386_sys_types[] = {
   { 0xa6, "OpenBSD" },
   { 0xa7, "NeXTSTEP" },
   { 0xa9, "NetBSD" },
+  { 0xaf, "Mac OS X" },
   { 0xb7, "BSDI fs" },
   { 0xb8, "BSDI swap" },
   { 0xbb, "Boot Wizard hidden" },
