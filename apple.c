@@ -102,7 +102,7 @@ void detect_apple_partmap(SECTION *section, int level)
 
 void detect_apple_volume(SECTION *section, int level)
 {
-  char s[256], t[256], volname[514];
+  char s[256], t[514];
   unsigned char *buf;
   u2 magic, version, volnamelen;
   u4 blocksize, blockstart;
@@ -190,10 +190,7 @@ void detect_apple_volume(SECTION *section, int level)
     if (get_be_long(buf + 16) != 1)
       return;  /* parent folder id is not "root parent" */
     volnamelen = get_be_short(buf + 20);
-    memcpy(volname, buf + 22, volnamelen * 2);
-    volname[volnamelen*2] = 0;
-    volname[volnamelen*2+1] = 0;
-    format_unicode(volname, t);
+    format_utf16_be(buf + 22, volnamelen * 2, t);
     print_line(level + 1, "Volume name \"%s\"", t);
   }
 }

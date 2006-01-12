@@ -109,7 +109,7 @@ static int probe_udf(SECTION *section, int level, int sector_size)
   int seen_primary = 0;
   int seen_logical = 0;
   int i;
-  char s[256], unicode[32];
+  char s[256];
 
   /* first read the Anchor Volume Descriptor Pointer @ sector 256 */
   if (get_buffer(section, 256 * sector_size, 512, (void **)&buffer) < 512)
@@ -145,10 +145,7 @@ static int probe_udf(SECTION *section, int level, int sector_size)
 	  get_string(buffer + 25, 30, s);
 	  print_line(level+1, "Volume name \"%s\"", s);
 	} else if (buffer[24] == 16) {
-	  memcpy(unicode, buffer + 25, 30);
-	  unicode[30] = 0;
-	  unicode[31] = 0;
-	  format_unicode(unicode, s);
+	  format_utf16_le(buffer + 25, 30, s);
 	  print_line(level+1, "Volume name \"%s\"", s);
 	} else {
 	  print_line(level+1, "Volume name encoding not supported");

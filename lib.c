@@ -232,14 +232,52 @@ void format_ascii(void *from, char *to)
   *q = 0;
 }
 
-void format_unicode(void *from, char *to)
+void format_utf16_be(void *from, u4 len, char *to)
 {
   u2 *p = (u2 *)from;
+  u2 *p_end;
   u1 *q = (u1 *)to;
   u2 c;
 
-  for (;;) {
+  if (len)
+    p_end = (u2 *)(((u1 *)from) + len);
+  else
+    p_end = NULL;
+
+  while (p_end == NULL || p < p_end) {
     c = get_be_short(p);
+    if (c == 0)
+      break;
+    p++;  /* advance 2 bytes */
+
+    if (c >= 127 || c < 32) {
+      *q++ = '<';
+      *q++ = "0123456789ABCDEF"[c >> 12];
+      *q++ = "0123456789ABCDEF"[(c >> 8) & 15];
+      *q++ = "0123456789ABCDEF"[(c >> 4) & 15];
+      *q++ = "0123456789ABCDEF"[c & 15];
+      *q++ = '>';
+    } else {
+      *q++ = (u1)c;
+    }
+  }
+  *q = 0;
+}
+
+void format_utf16_le(void *from, u4 len, char *to)
+{
+  u2 *p = (u2 *)from;
+  u2 *p_end;
+  u1 *q = (u1 *)to;
+  u2 c;
+
+  if (len)
+    p_end = (u2 *)(((u1 *)from) + len);
+  else
+    p_end = NULL;
+
+  while (p_end == NULL || p < p_end) {
+    c = get_le_short(p);
     if (c == 0)
       break;
     p++;  /* advance 2 bytes */
@@ -298,6 +336,25 @@ void format_uuid_lvm(void *uuid, char *to)
   for (i = 0; i < 32; i++) {
     *to++ = *from++;
     if ((i & 3) == 1 && i > 1 && i < 29)
+      *to++ = '-';
+  }
+}
+
+void format_guid(void *guid, char *to)
+{
+  u1 *from = guid;
+  int i, c;
+
+  if (memcmp(guid, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) == 0) {
+    strcpy(to, "nil");
+    return;
+  }
+
+  for (i = 0; i < 16; i++) {
+    c = *from++;
+    *to++ = "0123456789ABCDEF"[c >> 4];
+    *to++ = "0123456789ABCDEF"[c & 15];
+    if (i == 3 || i == 5 || i == 7 || i == 9)
       *to++ = '-';
   }
 }

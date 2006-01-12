@@ -114,10 +114,7 @@ void detect_iso(SECTION *section, int level)
 
     case 2:  /* Supplementary Volume Descriptor, Joliet */
       /* read Volume ID */
-      memcpy(s, buf + 40, 32);
-      s[32] = 0;
-      s[33] = 0;
-      format_unicode(s, t);
+      format_utf16_be(buf + 40, 32, t);
       for (i = strlen(t)-1; i >= 0 && t[i] == ' '; i--)
 	t[i] = 0;
       print_line(level+1, "Joliet extension, volume name \"%s\"", t);

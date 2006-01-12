@@ -117,13 +117,14 @@ void format_blocky_size(char *buf, u8 count, u4 blocksize,
                         const char *blockname, const char *append);
 void format_size(char *buf, u8 size);
 void format_size_verbose(char *buf, u8 size);
-/* OLD: void format_size(char *buf, u8 size, u4 mult); */
 
 void format_ascii(void *from, char *to);
-void format_unicode(void *from, char *to);
+void format_utf16_be(void *from, u4 len, char *to);
+void format_utf16_le(void *from, u4 len, char *to);
 
 void format_uuid(void *from, char *to);
 void format_uuid_lvm(void *uuid, char *to);
+void format_guid(void *guid, char *to);
 
 /* endian-aware data access */
 

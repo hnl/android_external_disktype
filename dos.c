@@ -2,7 +2,7 @@
  * dos.c
  * Detection of DOS parition maps and file systems
  *
- * Copyright (c) 2003 Christoph Pfisterer
+ * Copyright (c) 2003-2006 Christoph Pfisterer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -122,7 +122,7 @@ struct systypes i386_sys_types[] = {
   { 0xe3, "DOS R/O" },
   { 0xe4, "SpeedStor" },
   { 0xeb, "BeOS fs" },
-  { 0xee, "EFI GPT" },
+  { 0xee, "EFI GPT protective" },
   { 0xef, "EFI (FAT-12/16/32)" },
   { 0xf0, "Linux/PA-RISC boot" },
   { 0xf1, "SpeedStor" },
@@ -274,6 +274,108 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 	analyze_recursive(section, level + 1,
 			  (tablebase + start) * 512, (u8)size * 512, 0);
       }
+    }
+  }
+}
+
+/*
+ * EFI GPT partition map
+ */
+
+struct gpttypes {
+  char *guid;
+  char *name;
+};
+
+struct gpttypes gpt_types[] = {
+  { "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", "Unused" },
+  { "\0x28\0x73\0x2A\0xC1\0x1F\0xF8\0xD2\0x11\0xBA\0x4B\0x00\0xA0\0xC9\0x3E\0xC9\0x3B", "EFI System" },
+  { "\0x16\0xE3\0xC9\0xE3\0x5C\0x0B\0xB8\0x4D\0x81\0x7D\0xF9\0x2D\0xF0\0x02\0x15\0xAE", "Microsoft Reserved" },
+  { "\0xA2\0xA0\0xD0\0xEB\0xE5\0xB9\0x33\0x44\0x87\0xC0\0x68\0xB6\0xB7\0x26\0x99\0xC7", "Basic Data" },
+  { "\0xAA\0xC8\0x08\0x58\0x8F\0x7E\0xE0\0x42\0x85\0xD2\0xE1\0xE9\0x04\0x34\0xCF\0xB3", "LDM Metadata" },
+  { "\0xA0\0x60\0x9B\0xAF\0x31\0x14\0x62\0x4F\0xBC\0x68\0x33\0x11\0x71\0x4A\0x69\0xAD", "LDM Data" },
+  { 0, 0 }
+};
+
+static char * get_name_for_guid(void *guid)
+{
+  int i;
+
+  for (i = 0; gpt_types[i].name; i++)
+    if (memcmp(gpt_types[i].guid, guid, 16) == 0)
+      return gpt_types[i].name;
+  return "Unknown";
+}
+
+void detect_gpt_partmap(SECTION *section, int level)
+{
+  unsigned char *buf;
+  u8 diskblocks, partmap_start, start, end, size;
+  u4 partmap_count, partmap_entry_size;
+  u4 i;
+  char s[256], append[64];
+
+  /* partition maps only occur at the start of a device */
+  if (section->pos != 0)
+    return;
+
+  /* get LBA 1: GPT header */
+  if (get_buffer(section, 512, 512, (void **)&buf) < 512)
+    return;
+
+  /* check signature */
+  if (memcmp(buf, "EFI PART", 8) != 0)
+    return;
+
+  /* get header information */
+  if (get_le_quad(buf + 0x18) != 1)
+    return;
+  diskblocks = get_le_quad(buf + 0x20) + 1;
+  partmap_start = get_le_quad(buf + 0x48);
+  partmap_count = get_le_long(buf + 0x50);
+  partmap_entry_size = get_le_long(buf + 0x54);
+
+  print_line(level, "GPT partition map, %d entries", (int)partmap_count);
+  format_blocky_size(s, diskblocks, 512, "sectors", NULL);
+  print_line(level+1, "Disk size %s", s);
+  format_guid(buf + 0x38, s);
+  print_line(level+1, "Disk GUID %s", s);
+
+  /* get entries */
+  for (i = 0; i < partmap_count; i++) {
+    if (get_buffer(section, (partmap_start * 512) + i * partmap_entry_size, partmap_entry_size, (void **)&buf) < partmap_entry_size)
+      return;
+
+    if (memcmp(buf, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) == 0) {
+      print_line(level, "Partition %d: unused", i+1);
+      continue;
+    }
+
+    /* size */
+    start = get_le_quad(buf + 0x20);
+    end = get_le_quad(buf + 0x28);
+    size = end + 1 - start;
+
+    sprintf(append, " from %llu", start);
+    format_blocky_size(s, size, 512, "sectors", append);
+    print_line(level, "Partition %d: %s", i+1, s);
+
+    /* type */
+    format_guid(buf, s);
+    print_line(level+1, "Type %s (GUID %s)", get_name_for_guid(buf), s);
+
+    /* partition name */
+    format_utf16_le(buf + 0x38, 72, s);
+    print_line(level+1, "Partition Name \"%s\"", s);
+
+    /* GUID */
+    format_guid(buf + 0x10, s);
+    print_line(level+1, "Partition GUID %s", s);
+
+    /* recurse for content detection */
+    if (start > 0 && size > 0) {  /* avoid recursion on self */
+      analyze_recursive(section, level + 1,
+			start * 512, size * 512, 0);
     }
   }
 }
