@@ -30,6 +30,11 @@ ifeq ($(NOSYS),)
   ifeq ($(system),Darwin)
     CPPFLAGS += -DUSE_MACOS_TYPE -DUSE_IOCTL_DARWIN
     LIBS     += -framework CoreServices
+    ifeq (/Developer/SDKs/MacOSX10.4u.sdk,$(wildcard /Developer/SDKs/MacOSX10.4u.sdk))
+      CPPFLAGS += -isysroot /Developer/SDKs/MacOSX10.4u.sdk
+      CFLAGS   += -arch i386 -arch ppc
+      LDFLAGS  += -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.4u.sdk
+    endif
   endif
   ifeq ($(system),AmigaOS)
     CC       += -noixemul
