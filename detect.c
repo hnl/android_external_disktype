@@ -91,6 +91,9 @@ void detect_cdimage(SECTION *section, int level);
 /* in vpc.c */
 void detect_vhd(SECTION *section, int level);
 
+/* in cloop.c */
+void detect_cloop(SECTION *section, int level);
+
 /* in archives.c */
 void detect_archive(SECTION *section, int level);
 
@@ -105,6 +108,7 @@ DETECTOR detectors[] = {
   /* 1: disk image formats */
   detect_vhd,               /* may stop */
   detect_cdimage,           /* may stop */
+  detect_cloop,
   detect_udif,
   /* 2: boot code */
   detect_linux_loader,
