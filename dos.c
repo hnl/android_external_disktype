@@ -211,7 +211,7 @@ void detect_dos_partmap(SECTION *section, int level)
     if (type == 0x05 || type == 0x0f || type == 0x85) {
       /* extended partition */
       detect_dos_partmap_ext(section, start, level + 1, &extpartnum);
-    } else {
+    } else if (type != 0xee) {
       /* recurse for content detection */
       analyze_recursive(section, level + 1,
 			(u8)start * 512, (u8)size * 512, 0);
@@ -271,8 +271,10 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
 
 	/* recurse for content detection */
-	analyze_recursive(section, level + 1,
-			  (tablebase + start) * 512, (u8)size * 512, 0);
+	if (type != 0xee) {
+	  analyze_recursive(section, level + 1,
+			    (tablebase + start) * 512, (u8)size * 512, 0);
+	}
       }
     }
   }
