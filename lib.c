@@ -2,7 +2,7 @@
  * lib.c
  * Global utility functions.
  *
- * Copyright (c) 2003-04 Christoph Pfisterer
+ * Copyright (c) 2003-2006 Christoph Pfisterer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -338,6 +338,7 @@ void format_uuid_lvm(void *uuid, char *to)
     if ((i & 3) == 1 && i > 1 && i < 29)
       *to++ = '-';
   }
+  *to = 0;
 }
 
 void format_guid(void *guid, char *to)
@@ -357,6 +358,7 @@ void format_guid(void *guid, char *to)
     if (i == 3 || i == 5 || i == 7 || i == 9)
       *to++ = '-';
   }
+  *to = 0;
 }
 
 /*
