@@ -212,7 +212,7 @@ void detect_cdrom_misc(SECTION *section, int level)
   }
 
   /* 3DO filesystem */
-  if (memcmp(buf, "\0x01\0x5a\0x5a\0x5a\0x5a\0x5a\0x01\0x00", 8) == 0 &&
+  if (memcmp(buf, "\x01\x5a\x5a\x5a\x5a\x5a\x01\x00", 8) == 0 &&
       memcmp(buf + 0x28, "CD-ROM", 6) == 0) {
     print_line(level, "3DO CD-ROM file system");
   }

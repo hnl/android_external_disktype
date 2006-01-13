@@ -84,7 +84,7 @@ void detect_archive(SECTION *section, int level)
   }
 
   /* bar */
-  if (memcmp(buf + 65, "\0x56\0", 2) == 0) {
+  if (memcmp(buf + 65, "\x56\0", 2) == 0) {
     print_line(level, "bar archive");
   }
 

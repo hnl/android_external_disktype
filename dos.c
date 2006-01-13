@@ -191,7 +191,7 @@ void detect_dos_partmap(SECTION *section, int level)
     return;
 
   /* parse the data for real */
-  print_line(level, "DOS partition map");
+  print_line(level, "DOS/MBR partition map");
   for (i = 0; i < 4; i++) {
     start = starts[i];
     size = sizes[i];
@@ -288,12 +288,22 @@ struct gpttypes {
 };
 
 struct gpttypes gpt_types[] = {
-  { "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", "Unused" },
-  { "\0x28\0x73\0x2A\0xC1\0x1F\0xF8\0xD2\0x11\0xBA\0x4B\0x00\0xA0\0xC9\0x3E\0xC9\0x3B", "EFI System" },
-  { "\0x16\0xE3\0xC9\0xE3\0x5C\0x0B\0xB8\0x4D\0x81\0x7D\0xF9\0x2D\0xF0\0x02\0x15\0xAE", "Microsoft Reserved" },
-  { "\0xA2\0xA0\0xD0\0xEB\0xE5\0xB9\0x33\0x44\0x87\0xC0\0x68\0xB6\0xB7\0x26\0x99\0xC7", "Basic Data" },
-  { "\0xAA\0xC8\0x08\0x58\0x8F\0x7E\0xE0\0x42\0x85\0xD2\0xE1\0xE9\0x04\0x34\0xCF\0xB3", "LDM Metadata" },
-  { "\0xA0\0x60\0x9B\0xAF\0x31\0x14\0x62\0x4F\0xBC\0x68\0x33\0x11\0x71\0x4A\0x69\0xAD", "LDM Data" },
+  { "\x28\x73\x2A\xC1\x1F\xF8\xD2\x11\xBA\x4B\x00\xA0\xC9\x3E\xC9\x3B", "EFI System" },
+  { "\x41\xEE\x4D\x02\xE7\x33\xD3\x11\x9D\x69\x00\x08\xC7\x81\xF3\x9F", "MBR partition scheme" },
+  { "\x16\xE3\xC9\xE3\x5C\x0B\xB8\x4D\x81\x7D\xF9\x2D\xF0\x02\x15\xAE", "MS Reserved" },
+  { "\xA2\xA0\xD0\xEB\xE5\xB9\x33\x44\x87\xC0\x68\xB6\xB7\x26\x99\xC7", "Basic Data" },
+  { "\xAA\xC8\x08\x58\x8F\x7E\xE0\x42\x85\xD2\xE1\xE9\x04\x34\xCF\xB3", "MS LDM Metadata" },
+  { "\xA0\x60\x9B\xAF\x31\x14\x62\x4F\xBC\x68\x33\x11\x71\x4A\x69\xAD", "MS LDM Data" },
+  { "\x1E\x4C\x89\x75\xEB\x3A\xD3\x11\xB7\xC1\x7B\x03\xA0\x00\x00\x00", "HP/UX Data" },
+  { "\x28\xE7\xA1\xE2\xE3\x32\xD6\x11\xA6\x82\x7B\x03\xA0\x00\x00\x00", "HP/UX Service" },
+  { "\x0F\x88\x9D\xA1\xFC\x05\x3B\x4D\xA0\x06\x74\x3F\x0F\x84\x91\x1E", "Linux RAID" },
+  { "\x6D\xFD\x57\x06\xAB\xA4\xC4\x43\x84\xE5\x09\x33\xC8\x4B\x4F\x4F", "Linux Swap" },
+  { "\x79\xD3\xD6\xE6\x07\xF5\xC2\x44\xA2\x3C\x23\x8F\x2A\x3D\xF9\x28", "Linux LVM" },
+  { "\xB4\x7C\x6E\x51\xCF\x6E\xD6\x11\x8F\xF8\x00\x02\x2D\x09\x71\x2B", "FreeBSD Data" },
+  { "\xB5\x7C\x6E\x51\xCF\x6E\xD6\x11\x8F\xF8\x00\x02\x2D\x09\x71\x2B", "FreeBSD Swap" },
+  { "\xB6\x7C\x6E\x51\xCF\x6E\xD6\x11\x8F\xF8\x00\x02\x2D\x09\x71\x2B", "FreeBSD UFS" },
+  { "\xB8\x7C\x6E\x51\xCF\x6E\xD6\x11\x8F\xF8\x00\x02\x2D\x09\x71\x2B", "FreeBSD Vinum" },
+  { "\x00\x53\x46\x48\x00\x00\xAA\x11\xAA\x11\x00\x30\x65\x43\xEC\xAC", "Mac HFS+" },
   { 0, 0 }
 };
 
@@ -314,6 +324,7 @@ void detect_gpt_partmap(SECTION *section, int level)
   u4 partmap_count, partmap_entry_size;
   u4 i;
   char s[256], append[64];
+  int last_unused;
 
   /* partition maps only occur at the start of a device */
   if (section->pos != 0)
@@ -342,14 +353,18 @@ void detect_gpt_partmap(SECTION *section, int level)
   print_line(level+1, "Disk GUID %s", s);
 
   /* get entries */
+  last_unused = 0;
   for (i = 0; i < partmap_count; i++) {
     if (get_buffer(section, (partmap_start * 512) + i * partmap_entry_size, partmap_entry_size, (void **)&buf) < partmap_entry_size)
       return;
 
     if (memcmp(buf, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) == 0) {
-      print_line(level, "Partition %d: unused", i+1);
+      if (last_unused == 0)
+	print_line(level, "Partition %d: unused", i+1);
+      last_unused = 1;
       continue;
     }
+    last_unused = 0;
 
     /* size */
     start = get_le_quad(buf + 0x20);
@@ -515,7 +530,7 @@ void detect_ntfs(SECTION *section, int level)
   if (memcmp(buf + 3, "NTFS    ", 8) != 0)
     return;
   /* disabled for now, mkntfs(8) doesn't generate it
-  if (memcmp(buf + 0x24, "\0x80\0x00\0x80\0x00", 4) != 0)
+  if (memcmp(buf + 0x24, "\x80\x00\x80\x00", 4) != 0)
     return;
   */
 
@@ -551,7 +566,7 @@ void detect_hpfs(SECTION *section, int level)
   if (get_buffer(section, 16*512, 512, (void **)&buf) < 512)
     return;
 
-  if (memcmp(buf, "\0xF9\0x95\0xE8\0x49\0xFA\0x53\0xE9\0xC5", 8) != 0)
+  if (memcmp(buf, "\xF9\x95\xE8\x49\xFA\x53\xE9\xC5", 8) != 0)
     return;
 
   print_line(level, "HPFS file system (version %d, functional version %d)",
