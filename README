@@ -1,6 +1,6 @@
-$Id: README,v 1.15 2005/04/02 14:38:55 chrisp Exp $   -*- text -*-
+$Id: README,v 1.16 2006/06/03 16:16:36 chrisp Exp $   -*- text -*-
 
- disktype 8
+ disktype 9
 ============
 
 The purpose of disktype is to detect the content format of a disk or
@@ -62,18 +62,18 @@ File systems: FAT12/FAT16/FAT32, NTFS, HPFS, MFS, HFS, HFS Plus,
   QNX4 FS, UDF, 3DO CD-ROM file system, Veritas VxFS, Xbox DVD file
   system.
 
-Partitioning: DOS/PC style, Apple, Amiga "Rigid Disk", ATARI ST
-  (AHDI3), BSD disklabel, Linux RAID physical disks, Linux LVM1
+Partitioning: DOS/PC style, EFI GPT, Apple, Amiga "Rigid Disk", ATARI
+  ST (AHDI3), BSD disklabel, Linux RAID physical disks, Linux LVM1
   physical volumes, Linux LVM2 physical volumes, Solaris x86 disklabel
   (vtoc), Solaris SPARC disklabel.
 
 Other structures: Debian split floppy header, Linux swap.
 
 Disk images: Raw CD image (.bin), Virtual PC hard disk image, Apple
-  UDIF disk image (limited).
+  UDIF disk image (limited), Linux cloop (limited).
 
 Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel, FreeBSD
-  loader, Sega Dreamcast (?).
+  loader, Sega Dreamcast.
 
 Compression formats: gzip, compress, bzip2.
 

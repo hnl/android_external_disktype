@@ -532,8 +532,14 @@ void detect_linux_misc(SECTION *section, int level)
       print_line(level, "Linux squashfs, version %d.%d, %s",
 		 major, minor, get_ve_name(en));
 
-      size = get_ve_long(en, buf + 8);
-      blocksize = get_ve_short(en, buf + 32);
+      if (major > 2)
+	size = get_ve_quad(en, buf + 63);
+      else
+	size = get_ve_long(en, buf + 8);
+      if (major > 1)
+	blocksize = get_ve_long(en, buf + 51);
+      else
+	blocksize = get_ve_short(en, buf + 32);
 
       format_size_verbose(s, size);
       print_line(level + 1, "Compressed size %s", s);
@@ -562,14 +568,15 @@ void detect_linux_loader(SECTION *section, int level)
   executable = (get_le_short(buf + 510) == 0xaa55) ? 1 : 0;
 
   /* boot sector stuff */
-  if (executable && memcmp(buf + 2, "LILO", 4) == 0)
+  if (executable && (memcmp(buf + 2, "LILO", 4) == 0 ||
+		     memcmp(buf + 6, "LILO", 4) == 0))
     print_line(level, "LILO boot code");
   if (executable && memcmp(buf + 3, "SYSLINUX", 8) == 0)
     print_line(level, "SYSLINUX boot code");
   if (fill >= 1024 && find_memory(buf, 1024, "ISOLINUX", 8) >= 0)
     print_line(level, "ISOLINUX boot code");
 
-  /* we know GRUB a little better now... */
+  /* we know GRUB a little better... */
   if (executable &&
       find_memory(buf, 512, "Geom\0Hard Disk\0Read\0 Error\0", 27) >= 0) {
     if (buf[0x3e] == 3) {

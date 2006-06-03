@@ -1,4 +1,4 @@
-$Id: TODO,v 1.11 2003/12/30 10:10:41 chrisp Exp $   -*- text -*-
+$Id: TODO,v 1.12 2006/06/03 16:16:36 chrisp Exp $   -*- text -*-
 
  disktype ToDo
 ===============
@@ -7,7 +7,7 @@ Check NTFS, HPFS, FAT stuff
 Check EVMS
 Nero CD images (.nrg)
 Other disklabels: SGI, OSF, Ultrix, Acorn, MS LDM, IBM, Minix,
-  Unixware, EFI GPT
+  Unixware
 Other FS: SGI EFS, SCO BFS, Acorn ADFS, JFFS1/2, IBM CMS FS
 
 Reverse-engineer the format of Apple disk images (esp. .dmg's)
