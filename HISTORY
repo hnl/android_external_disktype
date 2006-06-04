@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.30 2006/06/04 17:03:22 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.31 2006/06/04 20:05:06 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -97,7 +97,8 @@ Version 9 is still under development. It features the following
 improvements:
 
 Added file systems: Amiga SFS.
-Added other structures: Linux cloop (detection only), EFI GPT.
+Added other structures: Linux cloop (detection only), EFI GPT,
+  Windows/MS-DOS boot loader, BeOS boot loader.
 Improved file systems: Amiga FS/FFS, Amiga PFS, Linux squashfs.
 Improved other structures: Amiga "Rigid Disk" partitioning, LILO,
   ISO9660 El Torito.

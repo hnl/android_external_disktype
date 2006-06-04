@@ -49,6 +49,7 @@ void detect_gpt_partmap(SECTION *section, int level);
 void detect_fat(SECTION *section, int level);
 void detect_ntfs(SECTION *section, int level);
 void detect_hpfs(SECTION *section, int level);
+void detect_dos_loader(SECTION *section, int level);
 
 /* in cdrom.c */
 void detect_iso(SECTION *section, int level);
@@ -82,6 +83,7 @@ void detect_vxfs(SECTION *section, int level);
 
 /* in beos.c */
 void detect_bfs(SECTION *section, int level);
+void detect_beos_loader(SECTION *section, int level);
 
 /* in compressed.c */
 void detect_compressed(SECTION *section, int level);
@@ -114,6 +116,8 @@ DETECTOR detectors[] = {
   /* 2: boot code */
   detect_linux_loader,
   detect_bsd_loader,
+  detect_dos_loader,
+  detect_beos_loader,
   /* 3: partition tables */
   detect_bsd_disklabel,     /* may stop, recurses with FLAG_IN_DISKLABEL */
   detect_solaris_disklabel, /* may stop, recurses with FLAG_IN_DISKLABEL */

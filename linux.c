@@ -570,48 +570,43 @@ void detect_linux_loader(SECTION *section, int level)
   /* boot sector stuff */
   if (executable && (memcmp(buf + 2, "LILO", 4) == 0 ||
 		     memcmp(buf + 6, "LILO", 4) == 0))
-    print_line(level, "LILO boot code");
+    print_line(level, "LILO boot loader");
   if (executable && memcmp(buf + 3, "SYSLINUX", 8) == 0)
-    print_line(level, "SYSLINUX boot code");
+    print_line(level, "SYSLINUX boot loader");
   if (fill >= 1024 && find_memory(buf, fill, "ISOLINUX", 8) >= 0)
-    print_line(level, "ISOLINUX boot code");
+    print_line(level, "ISOLINUX boot loader");
 
   /* we know GRUB a little better... */
   if (executable &&
       find_memory(buf, 512, "Geom\0Hard Disk\0Read\0 Error\0", 27) >= 0) {
     if (buf[0x3e] == 3) {
-      print_line(level, "GRUB boot code, compat version %d.%d, boot drive 0x%02x",
+      print_line(level, "GRUB boot loader, compat version %d.%d, boot drive 0x%02x",
 		 (int)buf[0x3e], (int)buf[0x3f], (int)buf[0x40]);
     } else if (executable && buf[0x1bc] == 2 && buf[0x1bd] <= 2) {
       id = buf[0x3e];
       if (id == 0x10) {
-	print_line(level, "GRUB boot code, compat version %d.%d, normal version",
+	print_line(level, "GRUB boot loader, compat version %d.%d, normal version",
 		   (int)buf[0x1bc], (int)buf[0x1bd]);
       } else if (id == 0x20) {
-	print_line(level, "GRUB boot code, compat version %d.%d, LBA version",
+	print_line(level, "GRUB boot loader, compat version %d.%d, LBA version",
 		   (int)buf[0x1bc], (int)buf[0x1bd]);
       } else {
-	print_line(level, "GRUB boot code, compat version %d.%d",
+	print_line(level, "GRUB boot loader, compat version %d.%d",
 		   (int)buf[0x1bc], (int)buf[0x1bd]);
       }
     } else {
-      print_line(level, "GRUB boot code, unknown compat version %d",
+      print_line(level, "GRUB boot loader, unknown compat version %d",
 		 buf[0x3e]);
     }
   }
 
   /* Linux kernel loader */
-  if (fill >= 1024 && memcmp((char *)buf + 512 + 2, "HdrS", 4) == 0) {
+  if (fill >= 1024 && memcmp(buf + 512 + 2, "HdrS", 4) == 0) {
     print_line(level, "Linux kernel build-in loader");
   }
 
-  /* Windows NTLDR boot code */
-  /* (not Linux, but easier to do here than duplicate code in dos.c) */
-  if (find_memory(buf, fill, "NTLDR", 5) >= 0)
-    print_line(level, "Windows NTLDR boot code");
-
   /* Debian install floppy splitter */
-  /* (not exactly boot code, but should be detected before gzip/tar */
+  /* (not exactly boot code, but should be detected before gzip/tar) */
   if (memcmp(buf, "Floppy split ", 13) == 0) {
     char *name = (char *)buf + 32;
     char *number = (char *)buf + 164;

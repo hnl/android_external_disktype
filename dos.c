@@ -582,4 +582,28 @@ void detect_hpfs(SECTION *section, int level)
   /* TODO: BPB in boot sector, volume label -- information? */
 }
 
+/*
+ * DOS/Windows boot loaders
+ */
+
+void detect_dos_loader(SECTION *section, int level)
+{
+  int fill;
+  unsigned char *buf;
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  fill = get_buffer(section, 0, 2048, (void **)&buf);
+  if (fill < 512)
+    return;
+
+  if (find_memory(buf, fill, "NTLDR", 5) >= 0)
+    print_line(level, "Windows NTLDR boot loader");
+  else if (find_memory(buf, 512, "WINBOOT SYS", 11) >= 0)
+    print_line(level, "Windows 95/98/ME boot loader");
+  else if (find_memory(buf, 512, "MSDOS   SYS", 11) >= 0)
+    print_line(level, "Windows / MS-DOS boot loader");
+}
+
 /* EOF */

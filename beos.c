@@ -2,7 +2,7 @@
  * beos.c
  * Detection of BeOS file systems
  *
- * Copyright (c) 2003 Christoph Pfisterer
+ * Copyright (c) 2003-2006 Christoph Pfisterer
  * Based on a contribution by Shadowcaster
  *
  * Permission is hereby granted, free of charge, to any person
@@ -75,6 +75,28 @@ void detect_bfs(SECTION *section, int level)
       }
     }
   }
+}
+
+/*
+ * BeOS boot loader
+ */
+
+void detect_beos_loader(SECTION *section, int level)
+{
+  unsigned char *buf;
+
+  if (section->flags & FLAG_IN_DISKLABEL)
+    return;
+
+  if (get_buffer(section, 0, 512, (void **)&buf) < 512)
+    return;
+
+  if (find_memory(buf, 512, "Be Boot Loader", 14) >= 0)
+    print_line(level, "BeOS boot loader");
+  if (find_memory(buf, 512, "yT Boot Loader", 14) >= 0)
+    print_line(level, "ZETA/yellowTab boot loader");
+  if (find_memory(buf, 512, "\x04" "beos\x06" "system\x05" "zbeos", 18) >= 0)
+    print_line(level, "Haiku boot loader");
 }
 
 /* EOF */
