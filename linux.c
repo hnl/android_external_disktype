@@ -2,7 +2,7 @@
  * linux.c
  * Detection of Linux file systems and boot codes
  *
- * Copyright (c) 2003-04 Christoph Pfisterer
+ * Copyright (c) 2003-2006 Christoph Pfisterer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -573,7 +573,7 @@ void detect_linux_loader(SECTION *section, int level)
     print_line(level, "LILO boot code");
   if (executable && memcmp(buf + 3, "SYSLINUX", 8) == 0)
     print_line(level, "SYSLINUX boot code");
-  if (fill >= 1024 && find_memory(buf, 1024, "ISOLINUX", 8) >= 0)
+  if (fill >= 1024 && find_memory(buf, fill, "ISOLINUX", 8) >= 0)
     print_line(level, "ISOLINUX boot code");
 
   /* we know GRUB a little better... */
@@ -604,6 +604,11 @@ void detect_linux_loader(SECTION *section, int level)
   if (fill >= 1024 && memcmp((char *)buf + 512 + 2, "HdrS", 4) == 0) {
     print_line(level, "Linux kernel build-in loader");
   }
+
+  /* Windows NTLDR boot code */
+  /* (not Linux, but easier to do here than duplicate code in dos.c) */
+  if (find_memory(buf, fill, "NTLDR", 5) >= 0)
+    print_line(level, "Windows NTLDR boot code");
 
   /* Debian install floppy splitter */
   /* (not exactly boot code, but should be detected before gzip/tar */
