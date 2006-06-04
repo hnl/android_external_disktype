@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.29 2006/06/03 16:16:36 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.30 2006/06/04 17:03:22 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -99,7 +99,8 @@ improvements:
 Added file systems: Amiga SFS.
 Added other structures: Linux cloop (detection only), EFI GPT.
 Improved file systems: Amiga FS/FFS, Amiga PFS, Linux squashfs.
-Improved other structures: Amiga "Rigid Disk" partitioning, LILO.
+Improved other structures: Amiga "Rigid Disk" partitioning, LILO,
+  ISO9660 El Torito.
 
 
 EOF

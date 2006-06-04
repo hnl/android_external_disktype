@@ -123,7 +123,7 @@ struct systypes i386_sys_types[] = {
   { 0xe4, "SpeedStor" },
   { 0xeb, "BeOS fs" },
   { 0xee, "EFI GPT protective" },
-  { 0xef, "EFI (FAT-12/16/32)" },
+  { 0xef, "EFI System (FAT)" },
   { 0xf0, "Linux/PA-RISC boot" },
   { 0xf1, "SpeedStor" },
   { 0xf4, "SpeedStor" },
@@ -135,7 +135,7 @@ struct systypes i386_sys_types[] = {
 };
 
 
-static char * get_name_for_type(int type)
+char * get_name_for_mbrtype(int type)
 {
   int i;
 
@@ -206,7 +206,7 @@ void detect_dos_partmap(SECTION *section, int level)
     print_line(level, "Partition %d: %s",
 	       i+1, s);
 
-    print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
+    print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_mbrtype(type));
 
     if (type == 0x05 || type == 0x0f || type == 0x85) {
       /* extended partition */
@@ -268,7 +268,7 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
 	print_line(level, "Partition %d: %s",
 		   *extpartnum, s);
 	(*extpartnum)++;
-	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_type(type));
+	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_mbrtype(type));
 
 	/* recurse for content detection */
 	if (type != 0xee) {
@@ -290,7 +290,7 @@ struct gpttypes {
 };
 
 struct gpttypes gpt_types[] = {
-  { "\x28\x73\x2A\xC1\x1F\xF8\xD2\x11\xBA\x4B\x00\xA0\xC9\x3E\xC9\x3B", "EFI System" },
+  { "\x28\x73\x2A\xC1\x1F\xF8\xD2\x11\xBA\x4B\x00\xA0\xC9\x3E\xC9\x3B", "EFI System (FAT)" },
   { "\x41\xEE\x4D\x02\xE7\x33\xD3\x11\x9D\x69\x00\x08\xC7\x81\xF3\x9F", "MBR partition scheme" },
   { "\x16\xE3\xC9\xE3\x5C\x0B\xB8\x4D\x81\x7D\xF9\x2D\xF0\x02\x15\xAE", "MS Reserved" },
   { "\xA2\xA0\xD0\xEB\xE5\xB9\x33\x44\x87\xC0\x68\xB6\xB7\x26\x99\xC7", "Basic Data" },

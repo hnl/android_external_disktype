@@ -39,8 +39,10 @@ void detect_apple_partmap(SECTION *section, int level)
   u8 start, size;
 
   /* partition maps only occur at the start of a device */
+  /*  disabled to allow for APM maps in El Torito entries
   if (section->pos != 0)
     return;
+  */
 
   /*
     if (buf[off] == 0x45 && buf[off+1] == 0x52) {

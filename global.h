@@ -151,6 +151,10 @@ void get_padded_string(void *from, int len, char pad, char *to);
 int find_memory(void *haystack, int haystack_len,
 		void *needle, int needle_len);
 
+/* name table lookups */
+
+char * get_name_for_mbrtype(int type);
+
 /* error functions */
 
 void error(const char *msg, ...);

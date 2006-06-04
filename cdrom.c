@@ -2,7 +2,7 @@
  * cdrom.c
  * Detection of file systems for CD-ROM and similar media
  *
- * Copyright (c) 2003 Christoph Pfisterer
+ * Copyright (c) 2003-2006 Christoph Pfisterer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -147,11 +147,25 @@ static char *media_types[16] = {
   "reserved type 14", "reserved type 15"
 };
 
+static char * get_name_for_eltorito_platform(int id)
+{
+  if (id == 0)
+    return "x86";
+  if (id == 1)
+    return "PowerPC";
+  if (id == 2)
+    return "Macintosh";
+  if (id == 0xEF)
+    return "EFI";
+  return "unknown";
+}
+
 static void dump_boot_catalog(SECTION *section, u8 pos, int level)
 {
   unsigned char *buf;
-  int bootable, media, more;
+  int bootable, media, platform, system_type;
   u4 start, preload;
+  int entry, maxentry, off;
   char s[256];
 
   /* get boot catalog */
@@ -163,35 +177,70 @@ static void dump_boot_catalog(SECTION *section, u8 pos, int level)
     print_line(level, "Validation entry missing");
     return;
   }
-  /* TODO: checksum */
+  /* TODO: check checksum of the validation entry */
+  platform = buf[1];
+  /* TODO: ID string at bytes 0x04 - 0x1B */
 
-  /* initial/default entry */
-  if (buf[32] == 0x88 || buf[32] == 0x00) {
-    bootable = (buf[32] == 0x88) ? 1 : 0;
-    media = buf[33] & 15;
-    start = get_le_long(buf+40);
-    preload = get_le_short(buf+38);
-  } else {
-    print_line(level, "Initial/Default entry missing");
-    return;
+  maxentry = 2;
+  for (entry = 1; entry < maxentry + 1; entry++) {
+    if ((entry & 63) == 0) {
+      /* get the next CD sector */
+      if (get_buffer(section, pos + (entry / 64) * 2048, 2048, (void **)&buf) < 2048)
+        return;
+    }
+    off = (entry * 32) % 2048;
+
+    if (entry >= maxentry) {
+      if (buf[off] == 0x88)  /* more bootable entries without proper section headers */
+        maxentry++;
+      else
+        break;
+    }
+
+    if (entry == 1) {
+      if (!(buf[off] == 0x88 || buf[off] == 0x00)) {
+        print_line(level, "Initial/Default entry missing");
+        break;
+      }
+      if (buf[off + 32] == 0x90 || buf[off + 32] == 0x91)
+        maxentry = 3;
+    }
+
+    if (buf[off] == 0x88 || buf[off] == 0x00) {   /* boot entry */
+      bootable = (buf[off] == 0x88) ? 1 : 0;
+      media = buf[off + 1] & 15;
+      system_type = buf[off + 4];
+      start = get_le_long(buf + off + 8);
+      preload = get_le_short(buf + off + 6);
+
+      /* print and analyze further */
+      format_size(s, preload * 512);
+      print_line(level, "%s %s image, starts at %lu, preloads %s",
+                 bootable ? "Bootable" : "Non-bootable",
+                 media_types[media], start, s);
+      print_line(level + 1, "Platform 0x%02X (%s), System Type 0x%02X (%s)",
+                 platform, get_name_for_eltorito_platform(platform),
+                 system_type, get_name_for_mbrtype(system_type));
+      if (start > 0) {
+        analyze_recursive(section, level + 1,
+                          (u8)start * 2048, 0, 0);
+        /* TODO: calculate size in some way */
+      }
+
+    } else if (buf[off] == 0x44) {   /* entry extension */
+      maxentry++;   /* doesn't count against the entry count from the last section header */
+
+    } else if (buf[off] == 0x90 || buf[off] == 0x91) {   /* section header */
+      platform = buf[off + 1];
+      maxentry = entry + 1 + get_le_short(buf + off + 2)
+               + ((buf[off] == 0x90) ? 1 : 0);
+      /* TODO: ID string at bytes 0x04 - 0x1F */
+
+    } else {
+      print_line(level, "Unknown entry type 0x%02X", buf[off]);
+      break;
+    }
   }
-
-  /* more stuff? */
-  more = (buf[64] == 0x90 || buf[64] == 0x91) ? 1 : 0;
-
-  /* print and analyze further */
-  format_size(s, preload * 512);
-  print_line(level, "%s %s image, starts at %lu, preloads %s",
-	     bootable ? "Bootable" : "Non-bootable",
-	     media_types[media], start, s);
-  if (start > 0) {
-    analyze_recursive(section, level + 1,
-		      (u8)start * 2048, 0, 0);
-    /* TODO: calculate size in some way */
-  }
-
-  if (more)
-    print_line(level, "Vendor-specific sections follow");
 }
 
 /*
