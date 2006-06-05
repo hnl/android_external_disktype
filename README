@@ -1,4 +1,4 @@
-$Id: README,v 1.16 2006/06/03 16:16:36 chrisp Exp $   -*- text -*-
+$Id: README,v 1.17 2006/06/05 07:57:51 chrisp Exp $   -*- text -*-
 
  disktype 9
 ============
@@ -72,8 +72,9 @@ Other structures: Debian split floppy header, Linux swap.
 Disk images: Raw CD image (.bin), Virtual PC hard disk image, Apple
   UDIF disk image (limited), Linux cloop (limited).
 
-Boot codes: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel, FreeBSD
-  loader, Sega Dreamcast.
+Boot loaders: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel, FreeBSD
+  loader, Windows/MS-DOS loader, BeOS loader, Haiku loader, Sega
+  Dreamcast.
 
 Compression formats: gzip, compress, bzip2.
 
