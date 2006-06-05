@@ -79,7 +79,7 @@ void detect_archive(SECTION *section, int level)
     print_line(level, "cpio archive, little-endian binary");
   } else if (get_be_short(buf) == 070707) {
     print_line(level, "cpio archive, big-endian binary");
-  } else if (memcmp(buf, "070707", 6) == 0) {
+  } else if (memcmp(buf, "07070", 5) == 0) {
     print_line(level, "cpio archive, ascii");
   }
 
