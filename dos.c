@@ -598,7 +598,9 @@ void detect_dos_loader(SECTION *section, int level)
   if (fill < 512)
     return;
 
-  if (find_memory(buf, fill, "NTLDR", 5) >= 0)
+  if (find_memory(buf, fill, "BOOTMGR", 5) >= 0)
+    print_line(level, "Windows BOOTMGR boot loader");
+  else if (find_memory(buf, fill, "NTLDR", 5) >= 0)
     print_line(level, "Windows NTLDR boot loader");
   else if (find_memory(buf, 512, "WINBOOT SYS", 11) >= 0)
     print_line(level, "Windows 95/98/ME boot loader");
