@@ -74,7 +74,7 @@ void detect_blank(SECTION *section, int level)
     blank_blocks = i + 1;
   }
 
-  if (blank_blocks >= max_blocks) {
+  if (blank_blocks > 0 && blank_blocks >= max_blocks) {
     print_line(level, "Blank disk/medium");
   } else if (blank_blocks > MIN_BLOCKS) {
     format_size(s, blank_blocks * block_size);
