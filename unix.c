@@ -363,7 +363,7 @@ void detect_bsd_disklabel(SECTION *section, int level)
 }
 
 /*
- * FreeBSD boot loader (?)
+ * FreeBSD and OpenBSD boot loaders
  */
 
 void detect_bsd_loader(SECTION *section, int level)
@@ -380,12 +380,16 @@ void detect_bsd_loader(SECTION *section, int level)
 	       get_le_long(buf + 0x1fa) == 50000 &&
 	       get_le_short(buf + 0x1fe) == 0xaa55) {
       print_line(level, "FreeBSD boot loader (i386 boot1 at sector 0)");
+    } else if (find_memory(buf, 512, "!Loading", 8) >= 0) {
+      print_line(level, "OpenBSD boot loader (i386 biosboot)");
     }
   }
 
   if (get_buffer(section, 0, 2048, (void **)&buf) == 2048) {
     if (find_memory(buf, 2048, "Starting the BTX loader", 23) >= 0) {
       print_line(level, "FreeBSD boot loader (CD loader)");
+    } else if (find_memory(buf, 2048, "/cdboot\0/CDBOOT\0", 16) >= 0) {
+      print_line(level, "OpenBSD boot loader (cdbr)");
     }
   }
 
