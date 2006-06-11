@@ -383,6 +383,12 @@ void detect_bsd_loader(SECTION *section, int level)
     }
   }
 
+  if (get_buffer(section, 0, 2048, (void **)&buf) == 2048) {
+    if (find_memory(buf, 2048, "Starting the BTX loader", 23) >= 0) {
+      print_line(level, "FreeBSD boot loader (CD loader)");
+    }
+  }
+
   if (get_buffer(section, 1024, 512, (void **)&buf) == 512) {
     if (memcmp(buf + 2, "BTX", 3) == 0) {
       print_line(level, "FreeBSD boot loader (i386 boot2/BTX %d.%02d at sector 2)",

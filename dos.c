@@ -606,6 +606,8 @@ void detect_dos_loader(SECTION *section, int level)
     print_line(level, "Windows 95/98/ME boot loader");
   else if (find_memory(buf, 512, "MSDOS   SYS", 11) >= 0)
     print_line(level, "Windows / MS-DOS boot loader");
+  else if (find_memory(buf, 512, "CPUBOOT SYS", 11) >= 0)
+    print_line(level, "FreeDOS boot loader");
 }
 
 /* EOF */
