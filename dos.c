@@ -606,8 +606,12 @@ void detect_dos_loader(SECTION *section, int level)
     print_line(level, "Windows 95/98/ME boot loader");
   else if (find_memory(buf, 512, "MSDOS   SYS", 11) >= 0)
     print_line(level, "Windows / MS-DOS boot loader");
-  else if (find_memory(buf, 512, "CPUBOOT SYS", 11) >= 0)
+  else if (find_memory(buf, 512, "CPUBOOT SYS", 11) >= 0 ||
+	   find_memory(buf, 512, "KERNEL  SYS", 11) >= 0)
     print_line(level, "FreeDOS boot loader");
+  else if (find_memory(buf, 512, "OS2LDR", 6) >= 0 ||
+	   find_memory(buf, 512, "OS2BOOT", 7) >= 0)
+    print_line(level, "OS/2 / eComStation boot loader");
 }
 
 /* EOF */
