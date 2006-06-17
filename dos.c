@@ -612,6 +612,10 @@ void detect_dos_loader(SECTION *section, int level)
   else if (find_memory(buf, 512, "OS2LDR", 6) >= 0 ||
 	   find_memory(buf, 512, "OS2BOOT", 7) >= 0)
     print_line(level, "OS/2 / eComStation boot loader");
+  else if (find_memory(buf, fill, "freeldr.sys", 11) >= 0)
+    print_line(level, "ReactOS freeldr boot loader");
+  else if (find_memory(buf, fill, "SETUPLDR.SYS", 12) >= 0)
+    print_line(level, "ReactOS CD boot loader");
 }
 
 /* EOF */
