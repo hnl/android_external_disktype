@@ -32,8 +32,14 @@ ifeq ($(NOSYS),)
     LIBS     += -framework CoreServices
     ifeq (/Developer/SDKs/MacOSX10.4u.sdk,$(wildcard /Developer/SDKs/MacOSX10.4u.sdk))
       CPPFLAGS += -isysroot /Developer/SDKs/MacOSX10.4u.sdk
-      CFLAGS   += -arch i386 -arch ppc
-      LDFLAGS  += -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.4u.sdk
+      CFLAGS   += -arch i386 -arch ppc -mmacosx-version-min=10.4
+      LDFLAGS  += -arch i386 -arch ppc -mmacosx-version-min=10.4 -Wl,-syslibroot,/Developer/SDKs/MacOSX10.4u.sdk
+    else
+      ifeq (/Developer/SDKs/MacOSX10.5.sdk,$(wildcard /Developer/SDKs/MacOSX10.5.sdk))
+        CPPFLAGS += -isysroot /Developer/SDKs/MacOSX10.5.sdk
+        CFLAGS   += -arch i386 -arch ppc
+        LDFLAGS  += -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk
+      endif
     endif
   endif
   ifeq ($(system),AmigaOS)
