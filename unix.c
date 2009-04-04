@@ -363,11 +363,12 @@ void detect_bsd_disklabel(SECTION *section, int level)
 }
 
 /*
- * FreeBSD and OpenBSD boot loaders
+ * FreeBSD, OpenBSD, NetBSD boot loaders
  */
 
 void detect_bsd_loader(SECTION *section, int level)
 {
+  int i;
   unsigned char *buf;
 
   if (section->flags & FLAG_IN_DISKLABEL)
@@ -382,6 +383,8 @@ void detect_bsd_loader(SECTION *section, int level)
       print_line(level, "FreeBSD boot loader (i386 boot1 at sector 0)");
     } else if (find_memory(buf, 512, "!Loading", 8) >= 0) {
       print_line(level, "OpenBSD boot loader (i386 biosboot)");
+    } else if (find_memory(buf, 512, "Not a bootxx image", 18) >= 0) {
+      print_line(level, "NetBSD/i386 boot loader (pbr.S, at sector 0)");
     }
   }
 
@@ -397,6 +400,29 @@ void detect_bsd_loader(SECTION *section, int level)
     if (memcmp(buf + 2, "BTX", 3) == 0) {
       print_line(level, "FreeBSD boot loader (i386 boot2/BTX %d.%02d at sector 2)",
 		 (int)buf[5], (int)buf[6]);
+    }
+  }
+
+  for (i = 0; i < 4; i++) {
+    if (get_buffer(section, i * 512, 512, (void **)&buf) == 512) {
+      int magic = -1;
+      if ((get_le_long(buf + 4) | 0x0f) == (0x7886b6d0 | 0x0f)) {
+	magic = get_le_long(buf + 4) & 0x0f;
+      } else if ((get_le_long(buf + 500) | 0x0f) == (0x7886b6d0 | 0x0f)) {
+	magic = get_le_long(buf + 500) & 0x0f;
+      }
+      if (magic >= 0) {
+	if (magic == 1)
+	  print_line(level, "NetBSD/i386 boot loader (magic 1, bootxx.S, at sector %d)", i);
+	else if (magic == 2)
+	  print_line(level, "NetBSD/i386 boot loader (magic 2, biosboot.S, at sector %d)", i);
+	else if (magic == 3)
+	  print_line(level, "NetBSD/i386 boot loader (magic 3, start_pxe.S, at sector %d)", i);
+	else if (magic == 4)
+	  print_line(level, "NetBSD/i386 boot loader (magic 4, fatboot.S, at sector %d)", i);
+	else
+	  print_line(level, "NetBSD/i386 boot loader (magic %d, unknown, at sector %d)", magic, i);
+      }
     }
   }
 }

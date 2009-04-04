@@ -1,7 +1,7 @@
-$Id: README,v 1.17 2006/06/05 07:57:51 chrisp Exp $   -*- text -*-
+$Id: README,v 1.18 2009/04/04 18:23:28 chrisp Exp $   -*- text -*-
 
- disktype 9
-============
+ disktype 10
+=============
 
 The purpose of disktype is to detect the content format of a disk or
 disk image. It knows about common file systems, partition tables, and
@@ -72,9 +72,9 @@ Other structures: Debian split floppy header, Linux swap.
 Disk images: Raw CD image (.bin), Virtual PC hard disk image, Apple
   UDIF disk image (limited), Linux cloop (limited).
 
-Boot loaders: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel, FreeBSD
-  loader, Windows/MS-DOS loader, BeOS loader, Haiku loader, Sega
-  Dreamcast.
+Boot loaders: LILO, GRUB, SYSLINUX, ISOLINUX, Linux kernel, FreeBSD,
+  OpenBSD, NetBSD, Windows/MS-DOS loader, BeOS loader, Haiku loader,
+  Sega Dreamcast.
 
 Compression formats: gzip, compress, bzip2.
 
