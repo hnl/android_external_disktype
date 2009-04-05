@@ -155,7 +155,7 @@ DETECTOR detectors[] = {
   detect_bfs,
   /* 5: file formats */
   detect_archive,
-  detect_compressed,  /* this is here because of boot disks */
+  detect_compressed,  /* this is down here because of boot disks */
   /* 6: blank formatted disk */
   detect_blank,
 

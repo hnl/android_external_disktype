@@ -57,6 +57,8 @@ typedef struct file_source {
  * helper functions
  */
 
+static void determine_file_size(FILE_SOURCE *fs, int filekind);
+
 static int analyze_file(SOURCE *s, int level);
 static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf);
 static void close_file(SOURCE *s);
@@ -72,18 +74,30 @@ static int check_position(int fd, u8 pos);
 SOURCE *init_file_source(int fd, int filekind)
 {
   FILE_SOURCE *fs;
-  off_t result;
 
   fs = (FILE_SOURCE *)malloc(sizeof(FILE_SOURCE));
   if (fs == NULL)
     bailout("Out of memory");
   memset(fs, 0, sizeof(FILE_SOURCE));
 
-  if (filekind != 0)  /* special treatment hook for devices */
+  if (filekind >= 3)  /* pipe or similar, non-seekable */
+    fs->c.sequential = 1;
+  else if (filekind != 0)  /* special treatment hook for devices */
     fs->c.analyze = analyze_file;
   fs->c.read_bytes = read_file;
   fs->c.close = close_file;
   fs->fd = fd;
+
+  if (!fs->c.sequential)
+    determine_file_size(fs, filekind);
+
+  return (SOURCE *)fs;
+}
+
+static void determine_file_size(FILE_SOURCE *fs, int filekind)
+{
+  off_t result;
+  int fd = fs->fd;
 
   /*
    * Determine the size using various methods. The first method that
@@ -177,12 +191,24 @@ SOURCE *init_file_source(int fd, int filekind)
   }
 #endif
 
+  /*
+   * Check if we can seek at all, and turn on sequential reads if not. This
+   * effectively detects "real" character devices. For pipes and sockets we
+   * already set the flag and don't even run this function, because we
+   * expect them to be non-seekable and not have a size.
+   */
+  if (!fs->c.size_known) {
+    result = lseek(fd, 1, SEEK_SET);
+    if (result != 1)
+      fs->c.sequential = 1;
+  }
+
 #if USE_BINARY_SEARCH
   /*
    * binary search:
    * Works on anything that can seek, but is quite expensive.
    */
-  if (!fs->c.size_known) {
+  if (!fs->c.size_known && !fs->c.sequential) {
     u8 lower, upper, current;
 
     /* TODO: check that the target can seek at all */
@@ -215,8 +241,6 @@ SOURCE *init_file_source(int fd, int filekind)
 #endif
   }
 #endif
-
-  return (SOURCE *)fs;
 }
 
 /*
@@ -243,11 +267,13 @@ static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf)
   u8 got;
   int fd = ((FILE_SOURCE *)s)->fd;
 
-  /* seek to the requested position */
-  result_seek = lseek(fd, pos, SEEK_SET);
-  if (result_seek != pos) {
-    errore("Seek to %llu failed", pos);
-    return 0;
+  /* seek to the requested position (unless we're a pipe) */
+  if (!s->sequential) {
+    result_seek = lseek(fd, pos, SEEK_SET);
+    if (result_seek != pos) {
+      errore("Seek to %llu failed", pos);
+      return 0;
+    }
   }
 
   /* read from there */
@@ -281,7 +307,7 @@ static void close_file(SOURCE *s)
 {
   int fd = ((FILE_SOURCE *)s)->fd;
 
-  if (fd >= 0)
+  if (fd > 2)  /* don't close stdin/out/err */
     close(fd);
 }
 
