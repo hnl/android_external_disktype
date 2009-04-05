@@ -1,4 +1,4 @@
-$Id: README,v 1.18 2009/04/04 18:23:28 chrisp Exp $   -*- text -*-
+$Id: README,v 1.19 2009/04/05 07:43:03 chrisp Exp $   -*- text -*-
 
  disktype 10
 =============
@@ -56,8 +56,8 @@ for some example command lines.
 The following formats are recognized by this version of disktype.
 
 File systems: FAT12/FAT16/FAT32, NTFS, HPFS, MFS, HFS, HFS Plus,
-  ISO9660, ext2/ext3, Minix, ReiserFS, Reiser4, Linux romfs, Linux
-  cramfs, Linux squashfs, UFS (some variations), SysV FS (some
+  ISO9660, ext2/ext3/ext4, Minix, ReiserFS, Reiser4, Linux romfs,
+  Linux cramfs, Linux squashfs, UFS (some variations), SysV FS (some
   variations), JFS, XFS, Amiga FS/FFS, Amiga SFS, Amiga PFS, BeOS BFS,
   QNX4 FS, UDF, 3DO CD-ROM file system, Veritas VxFS, Xbox DVD file
   system.
