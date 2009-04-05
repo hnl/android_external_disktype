@@ -1,4 +1,4 @@
-$Id: HISTORY,v 1.34 2009/04/05 07:43:03 chrisp Exp $   -*- text -*-
+$Id: HISTORY,v 1.35 2009/04/05 10:55:10 chrisp Exp $   -*- text -*-
 
  disktype History
 ==================
@@ -107,7 +107,7 @@ Improved other structures: Amiga "Rigid Disk" partitioning, LILO,
 Version 10 was released on Xxx x, 2009. It features the following
 improvements:
 
-Added file systems: ext4.
+Added file systems: ext4, btrfs.
 Added other structures: NetBSD boot loader.
 Improved file systems: -
 Improved other structures: -

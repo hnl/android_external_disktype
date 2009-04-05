@@ -94,6 +94,33 @@ void detect_ext234(SECTION *section, int level)
 }
 
 /*
+ * btrfs file system
+ */
+
+void detect_btrfs(SECTION *section, int level)
+{
+  unsigned char *buf;
+  char s[258];
+
+  if (get_buffer(section, 64 * 1024, 1024, (void **)&buf) < 1024)
+    return;
+
+  if (memcmp(buf + 64, "_BHRfS_M", 8) == 0) {
+    print_line(level, "Btrfs file system");
+
+    get_string(buf + 299, 256, s);
+    if (s[0])
+      print_line(level + 1, "Volume name \"%s\"", s);
+
+    format_uuid(buf + 32, s);
+    print_line(level + 1, "UUID %s", s);
+
+    format_size(s, get_le_quad(buf + 0x70));
+    print_line(level + 1, "Volume size %s", s);
+  }
+}
+
+/*
  * ReiserFS file system
  */
 

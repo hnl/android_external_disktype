@@ -60,6 +60,7 @@ void detect_udf(SECTION *section, int level);
 
 /* in linux.c */
 void detect_ext234(SECTION *section, int level);
+void detect_btrfs(SECTION *section, int level);
 void detect_reiser(SECTION *section, int level);
 void detect_reiser4(SECTION *section, int level);
 void detect_linux_raid(SECTION *section, int level);
@@ -137,6 +138,7 @@ DETECTOR detectors[] = {
   detect_cdrom_misc,
   detect_iso,
   detect_ext234,
+  detect_btrfs,
   detect_reiser,
   detect_reiser4,
   detect_linux_raid,
