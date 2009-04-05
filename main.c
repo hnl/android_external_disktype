@@ -188,7 +188,7 @@ static void show_macos_type(const char *filename)
   err = FSPathMakeRef(filename, &ref, NULL);
   if (err == 0) {
     err = FSGetCatalogInfo(&ref, kFSCatInfoFinderInfo,
-			   &info, NULL, NULL, NULL);
+                           &info, NULL, NULL, NULL);
   }
 
   if (err == 0) {
@@ -205,7 +205,7 @@ static void show_macos_type(const char *filename)
       format_ascii(creatorcode, s2);
 
       print_line(0, "Type code \"%s\", creator code \"%s\"",
-		 s1, s2);
+                 s1, s2);
     } else {
       print_line(0, "No type and creator code");
     }

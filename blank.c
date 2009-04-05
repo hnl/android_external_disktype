@@ -66,7 +66,7 @@ void detect_blank(SECTION *section, int level)
 
     for (j = 0; j < block_size; j++) {
       if (buffer[j] != code)
-	break;
+        break;
     }
     if (j < block_size)
       break;

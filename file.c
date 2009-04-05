@@ -132,7 +132,7 @@ SOURCE *init_file_source(int fd, int filekind)
       fs->c.size = (u8)blockcount * 512;
 #if DEBUG_SIZE
       printf("Size: Linux 32-bit ioctl reports %llu (%lu blocks)\n",
-	     fs->c.size, blockcount);
+             fs->c.size, blockcount);
 #endif
     }
   }
@@ -166,11 +166,11 @@ SOURCE *init_file_source(int fd, int filekind)
     u8 blockcount;
     if (ioctl(fd, DKIOCGETBLOCKSIZE, (void *)&blocksize) >= 0) {
       if (ioctl(fd, DKIOCGETBLOCKCOUNT, (void *)&blockcount) >= 0) {
-	fs->c.size_known = 1;
+        fs->c.size_known = 1;
         fs->c.size = blockcount * blocksize;
 #if DEBUG_SIZE
-	printf("Size: Darwin ioctl reports %llu (%llu blocks of %lu bytes)\n",
-	       fs->c.size, blockcount, blocksize);
+        printf("Size: Darwin ioctl reports %llu (%llu blocks of %lu bytes)\n",
+               fs->c.size, blockcount, blocksize);
 #endif
       }
     }
@@ -203,9 +203,9 @@ SOURCE *init_file_source(int fd, int filekind)
     while (upper > lower + 1) {
       current = (lower + upper) >> 1;
       if (check_position(fd, current))
-	lower = current;
+        lower = current;
       else
-	upper = current;
+        upper = current;
     }
     fs->c.size_known = 1;
     fs->c.size = lower + 1;
@@ -257,7 +257,7 @@ static u8 read_file(SOURCE *s, u8 pos, u8 len, void *buf)
     result_read = read(fd, p, len);
     if (result_read < 0) {
       if (errno == EINTR || errno == EAGAIN)
-	continue;
+        continue;
       errore("Data read failed at position %llu", pos + got);
       break;
     } else if (result_read == 0) {

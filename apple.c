@@ -84,7 +84,7 @@ void detect_apple_partmap(SECTION *section, int level)
     sprintf(append, " from %llu", start);
     format_blocky_size(s, size, 512, "sectors", append);
     print_line(level, "Partition %d: %s",
-	       i, s);
+               i, s);
 
     /* get type */
     get_string(buf + 48, 32, s);
@@ -93,7 +93,7 @@ void detect_apple_partmap(SECTION *section, int level)
     /* recurse for content detection */
     if (start > count && size > 0) {  /* avoid recursion on self */
       analyze_recursive(section, level + 1,
-			start * 512, size * 512, 0);
+                        start * 512, size * 512, 0);
     }
   }
 }
@@ -138,11 +138,11 @@ void detect_apple_volume(SECTION *section, int level)
       print_line(level, "HFS wrapper for HFS Plus");
 
       offset = (u8)get_be_short(buf + 0x7e) * blocksize +
-	(u8)blockstart * 512;
+        (u8)blockstart * 512;
       /* TODO: size */
 
       analyze_recursive(section, level + 1,
-			offset, 0, 0);
+                        offset, 0, 0);
     }
 
   } else if (magic == 0x482B) {
@@ -181,7 +181,7 @@ void detect_apple_volume(SECTION *section, int level)
     if ((firstleafnode + 1) * nodesize > cataloglength)
       return;  /* the location is beyond the end of the catalog */
     if (get_buffer(section, catalogstart + firstleafnode * nodesize,
-		   nodesize, (void **)&buf) < nodesize)
+                   nodesize, (void **)&buf) < nodesize)
       return;
 
     /* the first record in this leaf node should be for parent id 1 */

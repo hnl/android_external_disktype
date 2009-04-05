@@ -165,7 +165,7 @@ char * get_name_for_mbrtype(int type)
  */
 
 static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
-				   int level, int *extpartnum);
+                                   int level, int *extpartnum);
 
 void detect_dos_partmap(SECTION *section, int level)
 {
@@ -219,7 +219,7 @@ void detect_dos_partmap(SECTION *section, int level)
       strcat(append, ", bootable");
     format_blocky_size(s, size, 512, "sectors", append);
     print_line(level, "Partition %d: %s",
-	       i+1, s);
+               i+1, s);
 
     print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_mbrtype(type));
 
@@ -229,13 +229,13 @@ void detect_dos_partmap(SECTION *section, int level)
     } else if (type != 0xee) {
       /* recurse for content detection */
       analyze_recursive(section, level + 1,
-			(u8)start * 512, (u8)size * 512, 0);
+                        (u8)start * 512, (u8)size * 512, 0);
     }
   }
 }
 
 static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
-				   int level, int *extpartnum)
+                                   int level, int *extpartnum)
 {
   unsigned char *buf;
   u8 tablebase, nexttablebase;
@@ -268,28 +268,28 @@ static void detect_dos_partmap_ext(SECTION *section, u8 extbase,
       size = sizes[i];
       type = types[i];
       if (size == 0)
-	continue;
+        continue;
 
       if (type == 0x05 || type == 0x85) {
-	/* inner extended partition */
+        /* inner extended partition */
 
-	nexttablebase = extbase + start;
+        nexttablebase = extbase + start;
 
       } else {
-	/* logical partition */
+        /* logical partition */
 
-	sprintf(append, " from %llu+%lu", tablebase, start);
-	format_blocky_size(s, size, 512, "sectors", append);
-	print_line(level, "Partition %d: %s",
-		   *extpartnum, s);
-	(*extpartnum)++;
-	print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_mbrtype(type));
+        sprintf(append, " from %llu+%lu", tablebase, start);
+        format_blocky_size(s, size, 512, "sectors", append);
+        print_line(level, "Partition %d: %s",
+                   *extpartnum, s);
+        (*extpartnum)++;
+        print_line(level + 1, "Type 0x%02X (%s)", type, get_name_for_mbrtype(type));
 
-	/* recurse for content detection */
-	if (type != 0xee) {
-	  analyze_recursive(section, level + 1,
-			    (tablebase + start) * 512, (u8)size * 512, 0);
-	}
+        /* recurse for content detection */
+        if (type != 0xee) {
+          analyze_recursive(section, level + 1,
+                            (tablebase + start) * 512, (u8)size * 512, 0);
+        }
       }
     }
   }
@@ -394,7 +394,7 @@ void detect_gpt_partmap(SECTION *section, int level)
 
     if (memcmp(buf, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) == 0) {
       if (last_unused == 0)
-	print_line(level, "Partition %d: unused", i+1);
+        print_line(level, "Partition %d: unused", i+1);
       last_unused = 1;
       continue;
     }
@@ -424,7 +424,7 @@ void detect_gpt_partmap(SECTION *section, int level)
     /* recurse for content detection */
     if (start > 0 && size > 0) {  /* avoid recursion on self */
       analyze_recursive(section, level + 1,
-			start * 512, size * 512, 0);
+                        start * 512, size * 512, 0);
     }
   }
 }
@@ -515,13 +515,13 @@ void detect_fat(SECTION *section, int level)
   if (atari_csum == 0x1234)
     strcpy(s, ", ATARI ST bootable");
   print_line(level, "%s file system (hints score %d of %d%s)",
-	     fatnames[fattype], score, 5, s);
+             fatnames[fattype], score, 5, s);
 
   if (sectsize > 512)
     print_line(level + 1, "Unusual sector size %lu bytes", sectsize);
 
   format_blocky_size(s, clustercount, clustersize * sectsize,
-		     "clusters", NULL);
+                     "clusters", NULL);
   print_line(level + 1, "Volume size %s", s);
 
   /* get the cached volume name if present */
@@ -530,18 +530,18 @@ void detect_fat(SECTION *section, int level)
       memcpy(s, buf + 43, 11);
       s[11] = 0;
       for (i = 10; i >= 0 && s[i] == ' '; i--)
-	s[i] = 0;
+        s[i] = 0;
       if (strcmp(s, "NO NAME") != 0)
-	print_line(level + 1, "Volume name \"%s\"", s);
+        print_line(level + 1, "Volume name \"%s\"", s);
     }
   } else {
     if (buf[66] == 0x29) {
       memcpy(s, buf + 71, 11);
       s[11] = 0;
       for (i = 10; i >= 0 && s[i] == ' '; i--)
-	s[i] = 0;
+        s[i] = 0;
       if (strcmp(s, "NO NAME") != 0)
-	print_line(level + 1, "Volume name \"%s\"", s);
+        print_line(level + 1, "Volume name \"%s\"", s);
     }
   }
 }
@@ -604,7 +604,7 @@ void detect_hpfs(SECTION *section, int level)
     return;
 
   print_line(level, "HPFS file system (version %d, functional version %d)",
-	     (int)buf[8], (int)buf[9]);
+             (int)buf[8], (int)buf[9]);
 
   sectcount = get_le_long(buf + 16);
   format_blocky_size(s, sectcount, 512, "sectors", NULL);
@@ -638,10 +638,10 @@ void detect_dos_loader(SECTION *section, int level)
   else if (find_memory(buf, 512, "MSDOS   SYS", 11) >= 0)
     print_line(level, "Windows / MS-DOS boot loader");
   else if (find_memory(buf, 512, "CPUBOOT SYS", 11) >= 0 ||
-	   find_memory(buf, 512, "KERNEL  SYS", 11) >= 0)
+           find_memory(buf, 512, "KERNEL  SYS", 11) >= 0)
     print_line(level, "FreeDOS boot loader");
   else if (find_memory(buf, 512, "OS2LDR", 6) >= 0 ||
-	   find_memory(buf, 512, "OS2BOOT", 7) >= 0)
+           find_memory(buf, 512, "OS2BOOT", 7) >= 0)
     print_line(level, "OS/2 / eComStation boot loader");
   else if (find_memory(buf, fill, "freeldr.sys", 11) >= 0)
     print_line(level, "ReactOS freeldr boot loader");
