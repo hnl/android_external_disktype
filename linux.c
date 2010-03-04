@@ -626,7 +626,7 @@ void detect_linux_loader(SECTION *section, int level)
 
   /* we know GRUB a little better... */
   if (executable &&
-      find_memory(buf, 512, "Geom\0Hard Disk\0Read\0 Error\0", 27) >= 0) {
+      find_memory(buf, 512, "Geom\0Hard Disk\0Read\0 Error", 26) >= 0) {
     if (buf[0x3e] == 3) {
       print_line(level, "GRUB boot loader, compat version %d.%d, boot drive 0x%02x",
                  (int)buf[0x3e], (int)buf[0x3f], (int)buf[0x40]);
