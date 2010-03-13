@@ -354,6 +354,7 @@ static char * get_name_for_guid(void *guid)
 void detect_gpt_partmap(SECTION *section, int level)
 {
   unsigned char *buf;
+  u4 blocksize, revision;
   u8 diskblocks, partmap_start, start, end, size;
   u4 partmap_count, partmap_entry_size;
   u4 i;
@@ -364,68 +365,81 @@ void detect_gpt_partmap(SECTION *section, int level)
   if (section->pos != 0)
     return;
 
-  /* get LBA 1: GPT header */
-  if (get_buffer(section, 512, 512, (void **)&buf) < 512)
-    return;
-
-  /* check signature */
-  if (memcmp(buf, "EFI PART", 8) != 0)
-    return;
-
-  /* get header information */
-  if (get_le_quad(buf + 0x18) != 1)
-    return;
-  diskblocks = get_le_quad(buf + 0x20) + 1;
-  partmap_start = get_le_quad(buf + 0x48);
-  partmap_count = get_le_long(buf + 0x50);
-  partmap_entry_size = get_le_long(buf + 0x54);
-
-  print_line(level, "GPT partition map, %d entries", (int)partmap_count);
-  format_blocky_size(s, diskblocks, 512, "sectors", NULL);
-  print_line(level+1, "Disk size %s", s);
-  format_guid(buf + 0x38, s);
-  print_line(level+1, "Disk GUID %s", s);
-
-  /* get entries */
-  last_unused = 0;
-  for (i = 0; i < partmap_count; i++) {
-    if (get_buffer(section, (partmap_start * 512) + i * partmap_entry_size, partmap_entry_size, (void **)&buf) < partmap_entry_size)
-      return;
-
-    if (memcmp(buf, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) == 0) {
-      if (last_unused == 0)
-        print_line(level, "Partition %d: unused", i+1);
-      last_unused = 1;
+  for (blocksize = 512; blocksize <= 4096; blocksize <<= 1) {
+    /* get LBA 1: GPT header */
+    if (get_buffer(section, blocksize, blocksize, (void **)&buf) < blocksize)
       continue;
+    /* check signature */
+    if (memcmp(buf, "EFI PART", 8) != 0)
+      continue;
+
+    format_size(s, blocksize);
+    revision = get_le_long(buf + 0x08);
+    if (revision != 0x00010000) {
+      print_line(level, "GPT partition map, block size %s, unknown revision "
+                 "%d.%d", s, (int)(revision >> 16), (int)(revision & 0xffff));
+      return;
     }
+
+    /* get header information */
+    if (get_le_quad(buf + 0x18) != 1) {
+      print_line(level, "GPT partition map, block size %s, MyLBA != 1", s);
+      return;
+    }
+    diskblocks = get_le_quad(buf + 0x20) + 1;
+    partmap_start = get_le_quad(buf + 0x48);
+    partmap_count = get_le_long(buf + 0x50);
+    partmap_entry_size = get_le_long(buf + 0x54);
+
+    print_line(level, "GPT partition map, block size %s, %d entries",
+               s, (int)partmap_count);
+    format_blocky_size(s, diskblocks, blocksize, "blocks", NULL);
+    print_line(level+1, "Disk size %s", s);
+    format_guid(buf + 0x38, s);
+    print_line(level+1, "Disk GUID %s", s);
+
+    /* get entries */
     last_unused = 0;
+    for (i = 0; i < partmap_count; i++) {
+      if (get_buffer(section, (partmap_start * blocksize) + i * partmap_entry_size, partmap_entry_size, (void **)&buf) < partmap_entry_size)
+        return;
 
-    /* size */
-    start = get_le_quad(buf + 0x20);
-    end = get_le_quad(buf + 0x28);
-    size = end + 1 - start;
+      if (memcmp(buf, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) == 0) {
+        if (last_unused == 0)
+          print_line(level, "Partition %d: unused", i+1);
+        last_unused = 1;
+        continue;
+      }
+      last_unused = 0;
 
-    sprintf(append, " from %llu", start);
-    format_blocky_size(s, size, 512, "sectors", append);
-    print_line(level, "Partition %d: %s", i+1, s);
+      /* size */
+      start = get_le_quad(buf + 0x20);
+      end = get_le_quad(buf + 0x28);
+      size = end + 1 - start;
 
-    /* type */
-    format_guid(buf, s);
-    print_line(level+1, "Type %s (GUID %s)", get_name_for_guid(buf), s);
+      sprintf(append, " from %llu", start);
+      format_blocky_size(s, size, blocksize, "blocks", append);
+      print_line(level, "Partition %d: %s", i+1, s);
 
-    /* partition name */
-    format_utf16_le(buf + 0x38, 72, s);
-    print_line(level+1, "Partition Name \"%s\"", s);
+      /* type */
+      format_guid(buf, s);
+      print_line(level+1, "Type %s (GUID %s)", get_name_for_guid(buf), s);
 
-    /* GUID */
-    format_guid(buf + 0x10, s);
-    print_line(level+1, "Partition GUID %s", s);
+      /* partition name */
+      format_utf16_le(buf + 0x38, 72, s);
+      print_line(level+1, "Partition Name \"%s\"", s);
 
-    /* recurse for content detection */
-    if (start > 0 && size > 0) {  /* avoid recursion on self */
-      analyze_recursive(section, level + 1,
-                        start * 512, size * 512, 0);
+      /* GUID */
+      format_guid(buf + 0x10, s);
+      print_line(level+1, "Partition GUID %s", s);
+
+      /* recurse for content detection */
+      if (start > 0 && size > 0) {  /* avoid recursion on self */
+        analyze_recursive(section, level + 1,
+                          start * blocksize, size * blocksize, 0);
+      }
     }
+    break;  /* don't try bigger block sizes */
   }
 }
 
