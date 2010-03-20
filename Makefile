@@ -37,8 +37,14 @@ ifeq ($(NOSYS),)
     else
       ifeq (/Developer/SDKs/MacOSX10.5.sdk,$(wildcard /Developer/SDKs/MacOSX10.5.sdk))
         CPPFLAGS += -isysroot /Developer/SDKs/MacOSX10.5.sdk
-        CFLAGS   += -arch i386 -arch ppc
-        LDFLAGS  += -arch i386 -arch ppc -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk
+        CFLAGS   += -arch i386 -arch ppc -mmacosx-version-min=10.5
+        LDFLAGS  += -arch i386 -arch ppc -mmacosx-version-min=10.5 -Wl,-syslibroot,/Developer/SDKs/MacOSX10.5.sdk
+      else
+        ifeq (/Developer/SDKs/MacOSX10.6.sdk,$(wildcard /Developer/SDKs/MacOSX10.6.sdk))
+          CPPFLAGS += -isysroot /Developer/SDKs/MacOSX10.6.sdk
+          CFLAGS   += -arch i386 -arch ppc -mmacosx-version-min=10.6
+          LDFLAGS  += -arch i386 -arch ppc -mmacosx-version-min=10.6 -Wl,-syslibroot,/Developer/SDKs/MacOSX10.6.sdk
+        endif
       endif
     endif
   endif
